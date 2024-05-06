@@ -44,7 +44,7 @@ list(APPEND ${CMAKE_PROJECT_NAME}_sources ${src_sources})
 list(APPEND ${CMAKE_PROJECT_NAME}_headers ${src_headers})
 list(APPEND ${CMAKE_PROJECT_NAME}_includes ${src_includes})
 
-add_subdirectory(TestingParaview/Code/src)
+add_subdirectory(TestingParaview/src)
 list(APPEND ${CMAKE_PROJECT_NAME}_sources ${src_paraview_sources})
 list(APPEND ${CMAKE_PROJECT_NAME}_headers ${src_paraview_headers})
 list(APPEND ${CMAKE_PROJECT_NAME}_includes ${src_paraview_includes})
@@ -56,7 +56,7 @@ list(APPEND ${CMAKE_PROJECT_NAME}_TEST_includes ${src_test_includes})
 
 # Add file
 ###############################################################################
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/ListPolygons DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/DFN DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 # Create executable
 ################################################################################
