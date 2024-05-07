@@ -36,43 +36,41 @@ bool ImportData(const std::string& inputFileName,
         //ignore # FractureId; NumVertices
         std::getline(file, line);
 
-        //read FractureId NumVertices
-        unsigned int FractureId;
-        unsigned int NumVertices;
-        std::istringstream converterId;
-        std::istringstream convertN;
-        std::getline(file, line, ';');
-        converterId.str(line);
-        converterId >> FractureId;
-        std::getline(file,line);
-        convertN.str(line);
-        convertN >> NumVertices;
-
-        //ignore # Vertices
-        std::getline(file, line);
-
-        //read the coordinates of the vertices
-        Eigen::MatrixXd vertices(3, NumVertices);
-        for (unsigned int i = 0; i < 3; i++)
+        if (line != "")
         {
+
+            //read FractureId NumVertices
+            unsigned int FractureId;
+            unsigned int NumVertices;
+            std::istringstream converterId;
+            std::istringstream convertN;
+            std::getline(file, line, ';');
+            converterId.str(line);
+            converterId >> FractureId;
             std::getline(file,line);
-            std::replace(line.begin(),line.end(),';',' ');
-            std::istringstream convertCoord; //righe matrice vertici
-            convertCoord.str(line);
-            for (unsigned int j = 0; j < NumVertices; j++)
-                convertCoord >> vertices(i, j);
+            convertN.str(line);
+            convertN >> NumVertices;
 
+            //ignore # Vertices
+            std::getline(file, line);
+
+            //read the coordinates of the vertices
+            Eigen::MatrixXd vertices(3, NumVertices);
+            for (unsigned int i = 0; i < 3; i++)
+            {
+                std::getline(file,line);
+                std::replace(line.begin(),line.end(),';',' ');
+                std::istringstream convertCoord; //righe matrice vertici
+                convertCoord.str(line);
+                for (unsigned int j = 0; j < NumVertices; j++)
+                    convertCoord >> vertices(i, j);
+
+            }
+
+            Fractures[FractureId] = vertices; // ABBIAMO CREATO IL DIZIONARIO
         }
-
-        std::cout << std::scientific << std::setprecision(16) << vertices << std::endl;
-
-        Fractures[FractureId] = vertices;
-
     }
-    for (const auto& coppia:Fractures)
-    {
-        std::cout << coppia.first << "\n" << coppia.second << std::endl;
-    }
+
 
     file.close();
 
