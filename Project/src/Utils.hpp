@@ -7,4 +7,4 @@
 // ImportData(inputFileName, nFracture, Fractures) legge i dati dal file
 bool ImportData(const std::string& inputFileName,
                 unsigned int& nFracture,
-                std::map<unsigned int, Eigen::MatrixXd> Fractures);
+                std::map<unsigned int, Eigen::MatrixXd>& Fractures);

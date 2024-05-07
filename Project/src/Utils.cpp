@@ -2,14 +2,15 @@
 #include <iostream>
 #include <sstream>
 #include "Eigen/Eigen"
+#include "iomanip"
 
 #include "Utils.hpp"
 
 
 
-bool ImportData(const std::string inputFileName,
-                unsigned int nFracture,
-                std::map<unsigned int, Eigen::MatrixXd> Fractures)
+bool ImportData(const std::string& inputFileName,
+                unsigned int& nFracture,
+                std::map<unsigned int, Eigen::MatrixXd>& Fractures)
 {
     //Open file
     std::ifstream file;
@@ -26,25 +27,10 @@ bool ImportData(const std::string inputFileName,
     std::getline(file, line);
 
     //read Number of Fractures
+    std::getline(file, line);
     std::istringstream convert(line);
     convert >> nFracture;
 
-    /*
-    //salvo tutte le righe per sostituire ; con " ". per le prime tre righe no perchè non ci sono  ; oppure ignoriamo
-    std::list<std::string> listLines;
-    std::string line;
-    while (std::getline(file, line))
-    {
-        std::replace(line.begin(),line.end(),';',' ');
-        listLines.push_back(line);
-    }
-    file.close();
-
-    for (const std::string& line : listLines)
-    {
-
-    }
-    */
     while (!file.eof())
     {
         //ignore # FractureId; NumVertices
@@ -53,19 +39,43 @@ bool ImportData(const std::string inputFileName,
         //read FractureId NumVertices
         unsigned int FractureId;
         unsigned int NumVertices;
+        std::istringstream converterId;
+        std::istringstream convertN;
         std::getline(file, line, ';');
-        std::istringstream converterId(line);
+        converterId.str(line);
         converterId >> FractureId;
-        std::istringstream convertN(line.substr(2));
+        std::getline(file,line);
+        convertN.str(line);
         convertN >> NumVertices;
 
-        std::cout << FractureId << " " << NumVertices<< std::endl;
-        /*
-        auto ret = mesh.Cell0DMarkers.insert({marker, {id}});
-        if(!ret.second)
-            (ret.first)->second.push_back(id);
-        */
+        //ignore # Vertices
+        std::getline(file, line);
+
+        //read the coordinates of the vertices
+        Eigen::MatrixXd vertices(3, NumVertices);
+        for (unsigned int i = 0; i < 3; i++)
+        {
+            std::getline(file,line);
+            std::replace(line.begin(),line.end(),';',' ');
+            std::istringstream convertCoord; //righe matrice vertici
+            convertCoord.str(line);
+            for (unsigned int j = 0; j < NumVertices; j++)
+                convertCoord >> vertices(i, j);
+
+        }
+
+        std::cout << std::scientific << std::setprecision(16) << vertices << std::endl;
+
+        Fractures[FractureId] = vertices;
+
     }
+    for (const auto& coppia:Fractures)
+    {
+        std::cout << coppia.first << "\n" << coppia.second << std::endl;
+    }
+
+    file.close();
+
 
     return true;
 }

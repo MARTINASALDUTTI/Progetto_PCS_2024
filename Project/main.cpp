@@ -7,7 +7,7 @@
 
 int main()
 {
-    std::string inputFileName = "FR3_data.txt";
+    std::string inputFileName = "./DFN/FR3_data.txt";
 
     /*
      * creo la funzione import data a cui passo  nFracture e Fractures: un dizionario con chiave l'id e valore una struct
@@ -22,10 +22,12 @@ int main()
         std::cerr<< "error: import failed"<< std::endl;
         return -1;
     }
-    /* CREARE FUNZIONE PER STAMPARE
+    /*
+     CREARE FUNZIONE PER STAMPARE
     else
         std::cout << "Import successful: n= " << nFracture << ", Fractures= " << Fractures << std::endl;
     */
+
 
     return 0;
 }
