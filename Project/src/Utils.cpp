@@ -68,12 +68,28 @@ bool ImportData(const std::string& inputFileName,
             }
 
             Fractures[FractureId] = vertices; // ABBIAMO CREATO IL DIZIONARIO
+
         }
     }
 
-
     file.close();
+    return true;
+}
 
 
+bool fracDistance(Eigen::MatrixXd& FirstFracture,
+                  Eigen::MatrixXd& SecondFracture)
+{
+    Eigen::Vector3d firstCenter = FirstFracture.rowwise().sum()/(FirstFracture.cols());
+    Eigen::Vector3d secondCenter = SecondFracture.rowwise().sum()/(SecondFracture.cols());
+    double majorDistance = 0;
+    /*
+    for (unsigned int i = 0; i < FirstFracture.cols(); i++)
+    {
+        double distance = firstCenter - FirstFracture.row(i);
+        USARE LA NORMA 1... NO RADICE
+        if ()
+    }
+    */
     return true;
 }

@@ -22,11 +22,19 @@ int main()
         std::cerr<< "error: import failed"<< std::endl;
         return -1;
     }
-    /*
-     CREARE FUNZIONE PER STAMPARE
     else
-        std::cout << "Import successful: n= " << nFracture << ", Fractures= " << Fractures << std::endl;
-    */
+        std::cout << "Import successful" << std::endl;
+
+    // Seleziono le fratture tra cui cercare le tracce e le trovo
+    for (unsigned int i = 0; i < nFracture; i++)
+    {
+        for (unsigned int j = i+1; j < nFracture; j++)
+        {
+            if (fracDistance(Fractures[i], Fractures[j]))
+                //tracesData = findTraces(Fractures[i], Fractures[j]);
+                std::cout << "è andato zi;" << std::endl;
+        }
+    }
 
 
     return 0;
