@@ -83,13 +83,19 @@ bool fracDistance(Eigen::MatrixXd& FirstFracture,
     Eigen::Vector3d firstCenter = FirstFracture.rowwise().sum()/(FirstFracture.cols());
     Eigen::Vector3d secondCenter = SecondFracture.rowwise().sum()/(SecondFracture.cols());
     double majorDistance = 0;
-    /*
-    for (unsigned int i = 0; i < FirstFracture.cols(); i++)
+
+    for (unsigned int i = 0; i < 3; i++)
     {
-        double distance = firstCenter - FirstFracture.row(i);
-        USARE LA NORMA 1... NO RADICE
-        if ()
+        for (unsigned int j = 0; j < FirstFracture.cols(); j++)
+        {
+            double  distanceVC = ((FirstFracture(i,j)- firstCenter(i)) * (FirstFracture(i,j)- firstCenter(i)));
+                                 // )*(FirstFracture(i,j)))-((firstCenter(i))*(firstCenter(i)));
+            std::cout << i << " " << j << " " << distanceVC << std::endl;
+            if (distanceVC > majorDistance)
+                majorDistance = distanceVC;
+        }
     }
-    */
+    std::cout << majorDistance << std::endl;
+
     return true;
 }
