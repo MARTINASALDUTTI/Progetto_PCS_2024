@@ -32,10 +32,8 @@ int main()
         {
             if (fracDistance(Fractures[i], Fractures[j]))
                 //tracesData = findTraces(Fractures[i], Fractures[j]);
-                std::cout << "è andato zi;" << std::endl;
+                std::cout << "è andato zi" << std::endl;
         }
     }
-
-
     return 0;
 }
