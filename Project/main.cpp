@@ -15,7 +15,7 @@ int main()
     */
     unsigned int nFracture = 0;
     //std::map<unsigned int, DFNlibrary::DFNdata> Fractures;
-    std::map<unsigned int, Eigen::MatrixXd> Fractures;
+    std::vector<Eigen::MatrixXd> Fractures;
 
     if (!ImportData(inputFileName, nFracture, Fractures))
     {

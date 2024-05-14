@@ -10,7 +10,7 @@
 
 bool ImportData(const std::string& inputFileName,
                 unsigned int& nFracture,
-                std::map<unsigned int, Eigen::MatrixXd>& Fractures)
+                std::vector<Eigen::MatrixXd>& Fractures)
 {
     //Open file
     std::ifstream file;
@@ -40,13 +40,10 @@ bool ImportData(const std::string& inputFileName,
         {
 
             //read FractureId NumVertices
-            unsigned int FractureId;
             unsigned int NumVertices;
             std::istringstream converterId;
             std::istringstream convertN;
             std::getline(file, line, ';');
-            converterId.str(line);
-            converterId >> FractureId;
             std::getline(file,line);
             convertN.str(line);
             convertN >> NumVertices;
@@ -66,9 +63,7 @@ bool ImportData(const std::string& inputFileName,
                     convertCoord >> vertices(i, j);
 
             }
-
-            Fractures[FractureId] = vertices; // ABBIAMO CREATO IL DIZIONARIO
-
+            Fractures.push_back(vertices); // ABBIAMO CREATO IL VECTOR
         }
     }
 

@@ -7,7 +7,7 @@
 // ImportData(inputFileName, nFracture, Fractures) legge i dati dal file
 bool ImportData(const std::string& inputFileName,
                 unsigned int& nFracture,
-                std::map<unsigned int, Eigen::MatrixXd>& Fractures);
+                std::vector<Eigen::MatrixXd>& Fractures);
 
 //fracDistance return true if the distance between the centres of two fractures is short enough to contain a trace
 bool fracDistance(Eigen::MatrixXd& FirstFracture,
