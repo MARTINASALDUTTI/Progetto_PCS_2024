@@ -25,6 +25,7 @@ int main()
     else
         std::cout << "Import successful" << std::endl;
 
+    std::vector<Trace> Traces;
     // Seleziono le fratture tra cui cercare le tracce e le trovo
     for (unsigned int i = 0; i < nFracture; i++)
     {
@@ -34,7 +35,8 @@ int main()
             {
                 if (!areParallel(Fractures[i], Fractures[j]))
                 {
-                    //tracesData = findTraces(Fractures[i], Fractures[j]);
+
+                    findTraces(Fractures[i], Fractures[j], Traces);
                     std::cout << "è andato zi" << std::endl;
                 }
             }

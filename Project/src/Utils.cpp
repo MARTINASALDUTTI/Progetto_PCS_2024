@@ -140,3 +140,10 @@ bool areParallel(Eigen::MatrixXd& FirstFracture,
         return false;
 */
 }
+
+void findTraces(Eigen::MatrixXd& FirstFracture,
+                Eigen::MatrixXd& SecondFracture,
+                std::vector<Trace>& Traces)
+{
+
+}

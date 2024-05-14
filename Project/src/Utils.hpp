@@ -4,6 +4,8 @@
 #include <sstream>
 #include "Eigen/Eigen"
 
+#include "Fracture.hpp"
+
 // ImportData(inputFileName, nFracture, Fractures) legge i dati dal file
 bool ImportData(const std::string& inputFileName,
                 unsigned int& nFracture,
@@ -17,6 +19,7 @@ bool fracDistance(Eigen::MatrixXd& FirstFracture,
 bool areParallel(Eigen::MatrixXd& FirstFracture,
                  Eigen::MatrixXd& SecondFracture);
 
+//findTraces compute traces
 void findTraces(Eigen::MatrixXd& FirstFracture,
                 Eigen::MatrixXd& SecondFracture,
-                std::map<unsigned int, Eigen::MatrixXd>& Traces);
+                std::vector<Trace>& Traces);
