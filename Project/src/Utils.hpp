@@ -12,3 +12,11 @@ bool ImportData(const std::string& inputFileName,
 //fracDistance return true if the distance between the centres of two fractures is short enough to contain a trace
 bool fracDistance(Eigen::MatrixXd& FirstFracture,
                   Eigen::MatrixXd& SecondFracture);
+
+//areParallel return true if the fractures lie on two parallel planes
+bool areParallel(Eigen::MatrixXd& FirstFracture,
+                 Eigen::MatrixXd& SecondFracture);
+
+void findTraces(Eigen::MatrixXd& FirstFracture,
+                Eigen::MatrixXd& SecondFracture,
+                std::map<unsigned int, Eigen::MatrixXd>& Traces);

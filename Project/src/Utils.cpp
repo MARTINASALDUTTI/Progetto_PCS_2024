@@ -116,3 +116,32 @@ bool fracDistance(Eigen::MatrixXd& FirstFracture,
     else
         return true;
 }
+
+bool areParallel(Eigen::MatrixXd& FirstFracture,
+                  Eigen::MatrixXd& SecondFracture)
+{
+    Eigen::Vector3d normal1;
+    Eigen::Vector3d normal2;
+    Eigen::Vector3d vector1 = FirstFracture.col(0)-FirstFracture.col(1);
+    Eigen::Vector3d vector2 =FirstFracture.col(0)-FirstFracture.col(2);
+
+    Eigen::Vector3d vector3 = SecondFracture.col(0)-SecondFracture.col(1);
+    Eigen::Vector3d vector4 =SecondFracture.col(0)-SecondFracture.col(2);
+
+    normal1 = (vector1.cross(vector2)).normalized();
+    normal2 = (vector3.cross(vector4)).normalized();
+
+    //vedi che tolleranza usare
+
+    if(normal1.dot(normal2) == 1)
+        return true;
+    else
+        return false;
+
+    /*
+    if(normal1.dot(normal2) < 1 + 1e-16 && normal1.dot(normal2)> 1- 1e16)
+        return true;
+    else
+        return false;
+*/
+}
