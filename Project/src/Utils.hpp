@@ -22,7 +22,7 @@ bool fracDistance(Eigen::MatrixXd& FirstFracture,
 void computePlane(Data::Fract& Fracture);
 
 //findTraces compute traces
-void findTraces(Eigen::MatrixXd& FirstFracture,
-                Eigen::MatrixXd& SecondFracture,
+void findTraces(const Data::Fract& FirstFracture,
+                const Data::Fract& SecondFracture,
                 std::vector<Data::Trace>& Traces);
 }

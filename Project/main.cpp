@@ -32,15 +32,13 @@ int main()
     {
         for (unsigned int j = i+1; j < nFracture; j++)
         {
-            if (FractureOperations::fracDistance(Fractures[i].vertices, Fractures[j].vertices))
+            //checking if the fractures are parallel
+            //vedi che tolleranza usare
+            if(Fractures[i].normals.dot(Fractures[j].normals) != 1)
             {
-                //checking if the fractures are parallel
-                //vedi che tolleranza usare
-
-                if(Fractures[i].normals.dot(Fractures[j].normals) != 1)
+                if (FractureOperations::fracDistance(Fractures[i].vertices, Fractures[j].vertices))
                 {
-
-                    FractureOperations::findTraces(Fractures[i].vertices, Fractures[j].vertices, Traces);
+                    FractureOperations::findTraces(Fractures[i], Fractures[j], Traces);
                     std::cout << "è andato zi" << std::endl;
 
                 }

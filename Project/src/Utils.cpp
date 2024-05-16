@@ -127,10 +127,47 @@ void computePlane(Data::Fract& Fracture)
 
 }
 
-void findTraces(Eigen::MatrixXd& FirstFracture,
-                Eigen::MatrixXd& SecondFracture,
+void findTraces(const Data::Fract& FirstFracture,
+                const Data::Fract& SecondFracture,
                 std::vector<Data::Trace>& Traces)
 {
+    //chiedi  se escludere caso in cui l'intersezione è un solo punto
+    //find the intersection line -> equation r: p+tq
+
+    Eigen::Vector3d t = FirstFracture.normals.cross(SecondFracture.normals);
+
+    Eigen::MatrixXd A(3, 3);
+    A.row(0) = FirstFracture.normals;
+    A.row(1) = SecondFracture.normals;
+    A.row(2) = t;
+
+    Eigen::Vector3d b;
+    b.row(0) << FirstFracture.d;
+    b.row(1) << SecondFracture.d;
+    b.row(2) << 0;
+
+    Eigen::Vector3d P = A.colPivHouseholderQr().solve(b);
+
+    //checking if the vertice and the intersection line make an angle with cos > 0 (true) else false
+    bool previous = false;
+    if (t.dot(FirstFracture.vertices.col(0)-P)>0)
+        previous = true;
+
+    //itero fino a FirstFracture.vertices.cols-1 perchè devo copnfrontare l'ultimo vertice con il primo e non con i+1
+    for (unsigned int i = 0; i < FirstFracture.vertices.cols()-1; i++)
+    {
+        bool current = false;
+        if (t.dot(FirstFracture.vertices.col(i)-P)>0 )
+            current = true;
+
+        if(current != previous)
+        {
+            //if cosines have opposite sign, we have to solve the sistem
+            std::cout <<"previous " << previous << std::endl;
+        }
+        previous = current;
+    }
+
 
 }
 }
