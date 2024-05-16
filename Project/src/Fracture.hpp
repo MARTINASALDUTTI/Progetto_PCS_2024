@@ -4,6 +4,7 @@
 #include <sstream>
 #include "Eigen/Eigen"
 
+namespace Data{
 struct Trace{
     unsigned int TraceId;
     std::array<unsigned int, 2> FractureIds={};
@@ -12,3 +13,10 @@ struct Trace{
     double length;
     //std::array<bool,2> passThrough;
 };
+
+struct Fract {
+    Eigen::MatrixXd vertices;
+    Eigen::Vector3d normals;
+    double d; //known term of the fracture
+};
+}

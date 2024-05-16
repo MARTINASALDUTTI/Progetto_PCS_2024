@@ -7,10 +7,10 @@
 #include "Utils.hpp"
 
 
-
+namespace Data{
 bool ImportData(const std::string& inputFileName,
                 unsigned int& nFracture,
-                std::vector<Eigen::MatrixXd>& Fractures)
+                std::vector<Data::Fract>& Fractures)
 {
     //Open file
     std::ifstream file;
@@ -52,7 +52,8 @@ bool ImportData(const std::string& inputFileName,
             std::getline(file, line);
 
             //read the coordinates of the vertices
-            Eigen::MatrixXd vertices(3, NumVertices);
+            Data::Fract fractData;
+            Eigen::MatrixXd v(3, NumVertices); //v is the matrix of vertices' coordinates
             for (unsigned int i = 0; i < 3; i++)
             {
                 std::getline(file,line);
@@ -60,18 +61,21 @@ bool ImportData(const std::string& inputFileName,
                 std::istringstream convertCoord; //righe matrice vertici
                 convertCoord.str(line);
                 for (unsigned int j = 0; j < NumVertices; j++)
-                    convertCoord >> vertices(i, j);
+                    convertCoord >> v(i, j);
 
             }
-            Fractures.push_back(vertices); // ABBIAMO CREATO IL VECTOR
+            fractData.vertices = v;
+            FractureOperations::computePlane(fractData);
+            Fractures.push_back(fractData); // ABBIAMO CREATO IL VECTOR
         }
     }
 
     file.close();
     return true;
 }
+}
 
-
+namespace FractureOperations{
 bool fracDistance(Eigen::MatrixXd& FirstFracture,
                   Eigen::MatrixXd& SecondFracture)
 {
@@ -112,38 +116,21 @@ bool fracDistance(Eigen::MatrixXd& FirstFracture,
         return true;
 }
 
-bool areParallel(Eigen::MatrixXd& FirstFracture,
-                  Eigen::MatrixXd& SecondFracture)
+void computePlane(Data::Fract& Fracture)
 {
-    Eigen::Vector3d normal1;
-    Eigen::Vector3d normal2;
-    Eigen::Vector3d vector1 = FirstFracture.col(0)-FirstFracture.col(1);
-    Eigen::Vector3d vector2 =FirstFracture.col(0)-FirstFracture.col(2);
+    Eigen::Vector3d vector1 = Fracture.vertices.col(0)-Fracture.vertices.col(1);
+    Eigen::Vector3d vector2 =Fracture.vertices.col(0)-Fracture.vertices.col(2);
 
-    Eigen::Vector3d vector3 = SecondFracture.col(0)-SecondFracture.col(1);
-    Eigen::Vector3d vector4 =SecondFracture.col(0)-SecondFracture.col(2);
+    Fracture.normals = (vector1.cross(vector2)).normalized();
 
-    normal1 = (vector1.cross(vector2)).normalized();
-    normal2 = (vector3.cross(vector4)).normalized();
+    Fracture.d = -Fracture.normals.dot(Fracture.vertices.col(0));
 
-    //vedi che tolleranza usare
-
-    if(normal1.dot(normal2) == 1)
-        return true;
-    else
-        return false;
-
-    /*
-    if(normal1.dot(normal2) < 1 + 1e-16 && normal1.dot(normal2)> 1- 1e16)
-        return true;
-    else
-        return false;
-*/
 }
 
 void findTraces(Eigen::MatrixXd& FirstFracture,
                 Eigen::MatrixXd& SecondFracture,
-                std::vector<Trace>& Traces)
+                std::vector<Data::Trace>& Traces)
 {
 
+}
 }

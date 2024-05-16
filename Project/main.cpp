@@ -5,6 +5,7 @@
 #include "Utils.hpp"
 
 
+
 int main()
 {
     std::string inputFileName = "./DFN/FR3_data.txt";
@@ -15,9 +16,9 @@ int main()
     */
     unsigned int nFracture = 0;
     //std::map<unsigned int, DFNlibrary::DFNdata> Fractures;
-    std::vector<Eigen::MatrixXd> Fractures;
+    std::vector<Data::Fract> Fractures;
 
-    if (!ImportData(inputFileName, nFracture, Fractures))
+    if (!Data::ImportData(inputFileName, nFracture, Fractures))
     {
         std::cerr<< "error: import failed"<< std::endl;
         return -1;
@@ -25,19 +26,23 @@ int main()
     else
         std::cout << "Import successful" << std::endl;
 
-    std::vector<Trace> Traces;
+    std::vector<Data::Trace> Traces;
     // Seleziono le fratture tra cui cercare le tracce e le trovo
     for (unsigned int i = 0; i < nFracture; i++)
     {
         for (unsigned int j = i+1; j < nFracture; j++)
         {
-            if (fracDistance(Fractures[i], Fractures[j]))
+            if (FractureOperations::fracDistance(Fractures[i].vertices, Fractures[j].vertices))
             {
-                if (!areParallel(Fractures[i], Fractures[j]))
+                //checking if the fractures are parallel
+                //vedi che tolleranza usare
+
+                if(Fractures[i].normals.dot(Fractures[j].normals) != 1)
                 {
 
-                    findTraces(Fractures[i], Fractures[j], Traces);
+                    FractureOperations::findTraces(Fractures[i].vertices, Fractures[j].vertices, Traces);
                     std::cout << "è andato zi" << std::endl;
+
                 }
             }
         }
