@@ -154,7 +154,7 @@ void findTraces(const Data::Fract& FirstFracture,
         previous = true;
 
     //itero fino a FirstFracture.vertices.cols-1 perchè devo copnfrontare l'ultimo vertice con il primo e non con i+1
-    for (unsigned int i = 0; i < FirstFracture.vertices.cols()-1; i++)
+    for (unsigned int i = 0; i < FirstFracture.vertices.cols(); i++)
     {
         bool current = false;
         if (t.dot(FirstFracture.vertices.col(i)-P)>0 )
@@ -163,7 +163,35 @@ void findTraces(const Data::Fract& FirstFracture,
         if(current != previous)
         {
             //if cosines have opposite sign, we have to solve the sistem
-            std::cout <<"previous " << previous << std::endl;
+            Eigen::Vector3d V1 = FirstFracture.vertices.col(i);
+            Eigen::Vector3d V2 = FirstFracture.vertices.col((i + 1) % FirstFracture.vertices.cols());
+
+            Eigen::Vector3d edge = V2 - V1;
+            Eigen::Matrix2d A2d;
+            A2d << t.head<2>(), -edge.head<2>();
+            Eigen::Vector2d b2d = V1.head<2>() - P.head<2>();
+
+            // Risolvi il sistema lineare per trovare i parametri t e s
+            if (A2d.determinant() != 0)
+            {
+                Eigen::Vector2d ts = A2d.colPivHouseholderQr().solve(b2d);
+                std::cout <<  ts  << std::endl;
+                std::cout << std::endl;
+
+                double t_param = ts(0);
+                double s_param = ts(1);
+
+                // Controlla se il punto di intersezione è all'interno del segmento
+                if (s_param >= 0 && s_param <= 1)
+                {
+                    std::cout << " pippo " << std::endl;
+                    Eigen::Vector3d intersection = P + t_param * t;
+                        //intersectionPoints.push_back(intersection);
+                        std::cout << intersection << std::endl;
+
+                }
+
+            }
         }
         previous = current;
     }
