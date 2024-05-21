@@ -166,6 +166,15 @@ void findTraces(const Data::Fract& FirstFracture,
             Eigen::Vector3d V1 = FirstFracture.vertices.col(i);
             Eigen::Vector3d V2 = FirstFracture.vertices.col((i + 1) % FirstFracture.vertices.cols());
 
+            // eq retta:
+            // eq piano:
+            double t=-(SecondFracture.normals.dot(V1)+ SecondFracture.d) /(SecondFracture.normals.dot(V2 - V1));
+
+            Eigen::Vector3d intersection = V1+t*(V2-V1);
+
+            std::cout << intersection << std::endl;
+
+            /*
             Eigen::Vector3d edge = V2 - V1;
             Eigen::Matrix2d A2d;
             A2d << t.head<2>(), -edge.head<2>();
@@ -192,6 +201,7 @@ void findTraces(const Data::Fract& FirstFracture,
                 }
 
             }
+*/
         }
         previous = current;
     }
