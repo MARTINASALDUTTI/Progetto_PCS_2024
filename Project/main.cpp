@@ -8,6 +8,7 @@
 
 int main()
 {
+    double tol = 10e-10;
     std::string inputFileName = "./DFN/FR3_data.txt";
 
     /*
@@ -32,17 +33,21 @@ int main()
     {
         for (unsigned int j = i+1; j < nFracture; j++)
         {
-            //checking if the fractures are parallel
-            //vedi che tolleranza usare
-            if(Fractures[i].normals.dot(Fractures[j].normals) != 1)
-            {
-                if (FractureOperations::fracDistance(Fractures[i].vertices, Fractures[j].vertices))
+            //checking the distances between fractures
+            if (FractureOperations::fracDistance(Fractures[i].vertices, Fractures[j].vertices))
                 {
-                    FractureOperations::findTraces(Fractures[i], Fractures[j], Traces);
-                    std::cout << "è andato zi" << std::endl;
-
+                    Eigen::Vector3d t = Fractures[i].normals.cross(Fractures[j].normals);
+                    std::cout << "t: " << t.transpose()<< std::endl;
+                    if (std::abs(t[0]) < tol && std::abs(t[1]) < tol && std::abs(t[2]) < tol) // checking if the two fractures are parallel
+                    {
+                        std::cout << "parallel" << std::endl;
+                    }
+                    else // else check book case
+                    {
+                        FractureOperations::findTraces(Fractures[i], Fractures[j], t, Traces);
+                        std::cout << "andato" << std::endl;
+                    }
                 }
-            }
         }
     }
     return 0;

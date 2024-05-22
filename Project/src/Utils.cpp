@@ -123,18 +123,17 @@ void computePlane(Data::Fract& Fracture)
 
     Fracture.normals = (vector1.cross(vector2)).normalized();
 
-    Fracture.d = -Fracture.normals.dot(Fracture.vertices.col(0));
+    Fracture.d = Fracture.normals.dot(Fracture.vertices.col(0));
 
 }
 
 void findTraces(const Data::Fract& FirstFracture,
                 const Data::Fract& SecondFracture,
+                const Eigen::Vector3d& t,
                 std::vector<Data::Trace>& Traces)
 {
     //chiedi  se escludere caso in cui l'intersezione è un solo punto
     //find the intersection line -> equation r: p+tq
-
-    Eigen::Vector3d t = FirstFracture.normals.cross(SecondFracture.normals);
 
     Eigen::MatrixXd A(3, 3);
     A.row(0) = FirstFracture.normals;
@@ -148,64 +147,102 @@ void findTraces(const Data::Fract& FirstFracture,
 
     Eigen::Vector3d P = A.colPivHouseholderQr().solve(b);
 
-    //checking if the vertice and the intersection line make an angle with cos > 0 (true) else false
+    std::cout << "Normale 1: " << FirstFracture.normals.transpose() << std::endl;
+    std::cout << "Normale 2: " << SecondFracture.normals.transpose() << std::endl;
+    std::cout << "Vettore t: " << t.transpose() << std::endl;
+    std::cout << "Punto P: " << P.transpose() << std::endl;
+    std::cout << std::endl;
+
+
+    Eigen::Vector3d ExtremeTrace;
+
+    std::cout << "FirstFracture" << std::endl;
+    FractureOperations::findPosition(FirstFracture, t, P, ExtremeTrace);
+    std::cout << "SecondFracture" << std::endl;
+
+    FractureOperations::findPosition(SecondFracture, t, P, ExtremeTrace);
+    /*
+    for (unsigned int i = 1; i < FirstFracture.vertices.cols(); i++)
+    {
+        if((t.dot(FirstFracture.vertices.col(i)-P)==0) &&
+            (t.dot(FirstFracture.vertices.col((i + 1) % FirstFracture.vertices.cols())-P)==0))
+        {
+            Eigen::Vector3d V1 = FirstFracture.vertices.col(i);
+            Eigen::Vector3d V2 = FirstFracture.vertices.col((i + 1) % FirstFracture.vertices.cols());
+            FractureOperations::findExtreme(V1, V2,t, P, ExtremeTrace);
+        }
+    }
+*/
+
+    }
+
+void findPosition(const Data::Fract& FirstFracture,
+                  const Eigen::Vector3d& t,
+                  const Eigen::Vector3d& P,
+                  Eigen::Vector3d& ExtremeTrace)
+{
+
+    double tol = 1e-10;
     bool previous = false;
-    if (t.dot(FirstFracture.vertices.col(0)-P)>0)
+    if (t.dot(FirstFracture.vertices.col(0)-P)>=- tol)
         previous = true;
 
-    //itero fino a FirstFracture.vertices.cols-1 perchè devo copnfrontare l'ultimo vertice con il primo e non con i+1
-    for (unsigned int i = 0; i < FirstFracture.vertices.cols(); i++)
+    for (unsigned int i = 1; i < FirstFracture.vertices.cols(); i++)
     {
         bool current = false;
-        if (t.dot(FirstFracture.vertices.col(i)-P)>0 )
+        if (t.dot(FirstFracture.vertices.col(i)-P)>= - tol)
             current = true;
 
-        if(current != previous)
+        if(current != previous )
         {
             //if cosines have opposite sign, we have to solve the sistem
             Eigen::Vector3d V1 = FirstFracture.vertices.col(i);
-            Eigen::Vector3d V2 = FirstFracture.vertices.col((i + 1) % FirstFracture.vertices.cols());
-
-            // eq retta:
-            // eq piano:
-            double t=-(SecondFracture.normals.dot(V1)+ SecondFracture.d) /(SecondFracture.normals.dot(V2 - V1));
-
-            Eigen::Vector3d intersection = V1+t*(V2-V1);
-
-            std::cout << intersection << std::endl;
-
-            /*
-            Eigen::Vector3d edge = V2 - V1;
-            Eigen::Matrix2d A2d;
-            A2d << t.head<2>(), -edge.head<2>();
-            Eigen::Vector2d b2d = V1.head<2>() - P.head<2>();
-
-            // Risolvi il sistema lineare per trovare i parametri t e s
-            if (A2d.determinant() != 0)
-            {
-                Eigen::Vector2d ts = A2d.colPivHouseholderQr().solve(b2d);
-                std::cout <<  ts  << std::endl;
-                std::cout << std::endl;
-
-                double t_param = ts(0);
-                double s_param = ts(1);
-
-                // Controlla se il punto di intersezione è all'interno del segmento
-                if (s_param >= 0 && s_param <= 1)
-                {
-                    std::cout << " pippo " << std::endl;
-                    Eigen::Vector3d intersection = P + t_param * t;
-                        //intersectionPoints.push_back(intersection);
-                        std::cout << intersection << std::endl;
-
-                }
-
-            }
-*/
+            Eigen::Vector3d V2 = FirstFracture.vertices.col((i - 1) % FirstFracture.vertices.cols());
+            FractureOperations::findExtreme(V1, V2,t, P, ExtremeTrace);
         }
+        /*
+        if (((t.dot(FirstFracture.vertices.col(i)-P)>= -tol)|| (t.dot(FirstFracture.vertices.col(i)-P)<= tol)) &&
+         ((t.dot(FirstFracture.vertices.col((i + 1) % FirstFracture.vertices.cols())-P)>= -tol)||
+          (t.dot(FirstFracture.vertices.col((i + 1) % FirstFracture.vertices.cols())-P))<= tol))
+        {
+            Eigen::Vector3d V1 = FirstFracture.vertices.col(i);
+            Eigen::Vector3d V2 = FirstFracture.vertices.col((i + 1) % FirstFracture.vertices.cols());
+            FractureOperations::findExtreme(V1, V2,t, P, ExtremeTrace);
+        }
+*/
         previous = current;
     }
+}
+
+void findExtreme(const Eigen::Vector3d& V1,
+                 const Eigen::Vector3d& V2,
+                 const Eigen::Vector3d& t,
+                 const Eigen::Vector3d& P,
+                 Eigen::Vector3d& ExtremeTrace)
+{
+    Eigen::MatrixXd A(3,2);
+    A.col(0) = t;
+    A.col(1) = V1 - V2;
+
+    Eigen::Vector3d b;
+    b.row(0) << V1[0]-P[0];
+    b.row(1) << V1[1]-P[1];
+    b.row(2) << V1[2]-P[2];
 
 
+    Eigen::Vector2d paramVert = A.colPivHouseholderQr().solve(b);
+    std::cout << std::endl;
+
+    if(paramVert[1] >= 0 && paramVert[1] <= 1)
+    {                // checking if the extreme of the trace belongs to the fracture
+        ExtremeTrace = V1 + paramVert[1]*(V2-V1);
+        std::cout << " vertice estremo " << ExtremeTrace.transpose() << std::endl;
+    }
+    else
+        std::cout << "not find" << std::endl;
+
 }
+
 }
+
+

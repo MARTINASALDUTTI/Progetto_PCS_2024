@@ -24,5 +24,19 @@ void computePlane(Data::Fract& Fracture);
 //findTraces compute traces
 void findTraces(const Data::Fract& FirstFracture,
                 const Data::Fract& SecondFracture,
+                const Eigen::Vector3d& t,
                 std::vector<Data::Trace>& Traces);
+
+// findExtreme: compute traces' extreme
+void findPosition(const Data::Fract& FirstFracture,
+                 const Eigen::Vector3d& t,
+                 const Eigen::Vector3d& P,
+                 Eigen::Vector3d& ExtremeTrace);
+
+//findExtreme: compute traces' extreme
+void findExtreme(const Eigen::Vector3d& V1,
+                 const Eigen::Vector3d& V2,
+                 const Eigen::Vector3d& t,
+                 const Eigen::Vector3d& P,
+                 Eigen::Vector3d& ExtremeTrace);
 }
