@@ -161,18 +161,6 @@ void findTraces(const Data::Fract& FirstFracture,
     std::cout << "SecondFracture" << std::endl;
 
     FractureOperations::findPosition(SecondFracture, t, P, ExtremeTrace);
-    /*
-    for (unsigned int i = 1; i < FirstFracture.vertices.cols(); i++)
-    {
-        if((t.dot(FirstFracture.vertices.col(i)-P)==0) &&
-            (t.dot(FirstFracture.vertices.col((i + 1) % FirstFracture.vertices.cols())-P)==0))
-        {
-            Eigen::Vector3d V1 = FirstFracture.vertices.col(i);
-            Eigen::Vector3d V2 = FirstFracture.vertices.col((i + 1) % FirstFracture.vertices.cols());
-            FractureOperations::findExtreme(V1, V2,t, P, ExtremeTrace);
-        }
-    }
-*/
 
     }
 
@@ -187,7 +175,7 @@ void findPosition(const Data::Fract& FirstFracture,
     if (t.dot(FirstFracture.vertices.col(0)-P)>=- tol)
         previous = true;
 
-    for (unsigned int i = 1; i < FirstFracture.vertices.cols(); i++)
+    for (unsigned int i = 0; i < FirstFracture.vertices.cols(); i++)
     {
         bool current = false;
         if (t.dot(FirstFracture.vertices.col(i)-P)>= - tol)
@@ -197,19 +185,19 @@ void findPosition(const Data::Fract& FirstFracture,
         {
             //if cosines have opposite sign, we have to solve the sistem
             Eigen::Vector3d V1 = FirstFracture.vertices.col(i);
+            Eigen::Vector3d V2 = FirstFracture.vertices.col((i - 1) % FirstFracture.vertices.cols()); //-1%N = N-1 where N is a natural number
+            FractureOperations::findExtreme(V1, V2,t, P, ExtremeTrace);
+        }
+
+        if (((t.dot(FirstFracture.vertices.col(i)-P)>= -tol)|| (t.dot(FirstFracture.vertices.col(i)-P)<= tol)) &&
+         ((t.dot(FirstFracture.vertices.col((i - 1) % FirstFracture.vertices.cols())-P)>= -tol)||
+          (t.dot(FirstFracture.vertices.col((i - 1) % FirstFracture.vertices.cols())-P))<= tol))
+        {
+            Eigen::Vector3d V1 = FirstFracture.vertices.col(i);
             Eigen::Vector3d V2 = FirstFracture.vertices.col((i - 1) % FirstFracture.vertices.cols());
             FractureOperations::findExtreme(V1, V2,t, P, ExtremeTrace);
         }
-        /*
-        if (((t.dot(FirstFracture.vertices.col(i)-P)>= -tol)|| (t.dot(FirstFracture.vertices.col(i)-P)<= tol)) &&
-         ((t.dot(FirstFracture.vertices.col((i + 1) % FirstFracture.vertices.cols())-P)>= -tol)||
-          (t.dot(FirstFracture.vertices.col((i + 1) % FirstFracture.vertices.cols())-P))<= tol))
-        {
-            Eigen::Vector3d V1 = FirstFracture.vertices.col(i);
-            Eigen::Vector3d V2 = FirstFracture.vertices.col((i + 1) % FirstFracture.vertices.cols());
-            FractureOperations::findExtreme(V1, V2,t, P, ExtremeTrace);
-        }
-*/
+
         previous = current;
     }
 }
@@ -220,6 +208,7 @@ void findExtreme(const Eigen::Vector3d& V1,
                  const Eigen::Vector3d& P,
                  Eigen::Vector3d& ExtremeTrace)
 {
+    double tol = 1e-10;
     Eigen::MatrixXd A(3,2);
     A.col(0) = t;
     A.col(1) = V1 - V2;
@@ -229,20 +218,20 @@ void findExtreme(const Eigen::Vector3d& V1,
     b.row(1) << V1[1]-P[1];
     b.row(2) << V1[2]-P[2];
 
-
     Eigen::Vector2d paramVert = A.colPivHouseholderQr().solve(b);
-    std::cout << std::endl;
+    Eigen::Vector3d Candidate1= V1 + paramVert[1]*(V2-V1);
+    Eigen::Vector3d Candidate2 = P + paramVert[0]* t;
 
-    if(paramVert[1] >= 0 && paramVert[1] <= 1)
-    {                // checking if the extreme of the trace belongs to the fracture
-        ExtremeTrace = V1 + paramVert[1]*(V2-V1);
-        std::cout << " vertice estremo " << ExtremeTrace.transpose() << std::endl;
+    if ( ((Candidate1 - Candidate2)[0] < tol && (Candidate1 - Candidate2)[0] > -tol) &&
+         ((Candidate1 - Candidate2)[1] < tol && (Candidate1 - Candidate2)[1] > -tol) &&
+         ((Candidate1 - Candidate2)[2] < tol && (Candidate1 - Candidate2)[2] > -tol))
+    {
+        std::cout << "paramVert " << paramVert.transpose() << std::endl;
+        ExtremeTrace = Candidate1;
+        std::cout << "ExtremeTrace " << ExtremeTrace.transpose() << std::endl;
+        std::cout << std::endl;
     }
-    else
-        std::cout << "not find" << std::endl;
-
 }
-
 }
 
 
