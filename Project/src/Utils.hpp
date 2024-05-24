@@ -29,14 +29,19 @@ void findTraces(const Data::Fract& FirstFracture,
 
 // findExtreme: compute traces' extreme
 void findPosition(const Data::Fract& FirstFracture,
-                 const Eigen::Vector3d& t,
-                 const Eigen::Vector3d& P,
-                 Eigen::Vector3d& ExtremeTrace);
+                  const Data::Fract& SecondFracture,
+                  const Eigen::Vector3d& t,
+                  const Eigen::Vector3d& P,
+                  std::vector<Data::Trace>& Traces);
 
 //findExtreme: compute traces' extreme
 void findExtreme(const Eigen::Vector3d& V1,
                  const Eigen::Vector3d& V2,
                  const Eigen::Vector3d& t,
                  const Eigen::Vector3d& P,
-                 Eigen::Vector3d& ExtremeTrace);
+                 const Data::Fract& SecondFracture,
+                 std::vector<Data::Trace>& Traces);
+
+bool isPointInPolygon(const Eigen::Vector3d& point,
+                      const Data::Fract& polygon);
 }

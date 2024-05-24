@@ -147,27 +147,17 @@ void findTraces(const Data::Fract& FirstFracture,
 
     Eigen::Vector3d P = A.colPivHouseholderQr().solve(b);
 
-    std::cout << "Normale 1: " << FirstFracture.normals.transpose() << std::endl;
-    std::cout << "Normale 2: " << SecondFracture.normals.transpose() << std::endl;
-    std::cout << "Vettore t: " << t.transpose() << std::endl;
-    std::cout << "Punto P: " << P.transpose() << std::endl;
-    std::cout << std::endl;
-
-
     Eigen::Vector3d ExtremeTrace;
-
-    std::cout << "FirstFracture" << std::endl;
-    FractureOperations::findPosition(FirstFracture, t, P, ExtremeTrace);
-    std::cout << "SecondFracture" << std::endl;
-
-    FractureOperations::findPosition(SecondFracture, t, P, ExtremeTrace);
+    FractureOperations::findPosition(FirstFracture, SecondFracture, t, P, Traces);
+    FractureOperations::findPosition(SecondFracture,FirstFracture, t, P, Traces);
 
     }
 
 void findPosition(const Data::Fract& FirstFracture,
+                  const Data::Fract& SecondFracture,
                   const Eigen::Vector3d& t,
                   const Eigen::Vector3d& P,
-                  Eigen::Vector3d& ExtremeTrace)
+                  std::vector<Data::Trace>& Traces)
 {
 
     double tol = 1e-10;
@@ -186,7 +176,7 @@ void findPosition(const Data::Fract& FirstFracture,
             //if cosines have opposite sign, we have to solve the sistem
             Eigen::Vector3d V1 = FirstFracture.vertices.col(i);
             Eigen::Vector3d V2 = FirstFracture.vertices.col((i - 1) % FirstFracture.vertices.cols()); //-1%N = N-1 where N is a natural number
-            FractureOperations::findExtreme(V1, V2,t, P, ExtremeTrace);
+            FractureOperations::findExtreme(V1, V2,t, P, SecondFracture, Traces);
         }
 
         if (((t.dot(FirstFracture.vertices.col(i)-P)>= -tol)|| (t.dot(FirstFracture.vertices.col(i)-P)<= tol)) &&
@@ -195,7 +185,7 @@ void findPosition(const Data::Fract& FirstFracture,
         {
             Eigen::Vector3d V1 = FirstFracture.vertices.col(i);
             Eigen::Vector3d V2 = FirstFracture.vertices.col((i - 1) % FirstFracture.vertices.cols());
-            FractureOperations::findExtreme(V1, V2,t, P, ExtremeTrace);
+            FractureOperations::findExtreme(V1, V2,t, P, SecondFracture, Traces);
         }
 
         previous = current;
@@ -206,7 +196,8 @@ void findExtreme(const Eigen::Vector3d& V1,
                  const Eigen::Vector3d& V2,
                  const Eigen::Vector3d& t,
                  const Eigen::Vector3d& P,
-                 Eigen::Vector3d& ExtremeTrace)
+                 const Data::Fract& SecondFracture,
+                 std::vector<Data::Trace>& Traces)
 {
     double tol = 1e-10;
     Eigen::MatrixXd A(3,2);
@@ -226,11 +217,25 @@ void findExtreme(const Eigen::Vector3d& V1,
          ((Candidate1 - Candidate2)[1] < tol && (Candidate1 - Candidate2)[1] > -tol) &&
          ((Candidate1 - Candidate2)[2] < tol && (Candidate1 - Candidate2)[2] > -tol))
     {
-        std::cout << "paramVert " << paramVert.transpose() << std::endl;
-        ExtremeTrace = Candidate1;
-        std::cout << "ExtremeTrace " << ExtremeTrace.transpose() << std::endl;
-        std::cout << std::endl;
+        if (isPointInPolygon(Candidate1, SecondFracture))
+        {
+            Data::Trace ExtremeTrace;
+            ExtremeTrace.ExtremesCoord[0] = Candidate1;
+            Traces.push_back(ExtremeTrace);
+        }
     }
+}
+
+
+bool isPointInPolygon(const Eigen::Vector3d& point,
+                      const Data::Fract& polygon)
+{
+    Eigen::VectorXd lambda;
+    lambda =  polygon.vertices.colPivHouseholderQr().solve(point);
+    if (lambda.sum()<=1 && lambda.sum()>=0)
+        return true;
+    else
+        return false;
 }
 }
 

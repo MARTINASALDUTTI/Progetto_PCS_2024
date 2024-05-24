@@ -37,7 +37,6 @@ int main()
             if (FractureOperations::fracDistance(Fractures[i].vertices, Fractures[j].vertices))
                 {
                     Eigen::Vector3d t = Fractures[i].normals.cross(Fractures[j].normals);
-                    std::cout << "t: " << t.transpose()<< std::endl;
                     if (std::abs(t[0]) < tol && std::abs(t[1]) < tol && std::abs(t[2]) < tol) // checking if the two fractures are parallel
                     {
                         std::cout << "parallel" << std::endl;
@@ -45,10 +44,14 @@ int main()
                     else // else check book case
                     {
                         FractureOperations::findTraces(Fractures[i], Fractures[j], t, Traces);
-                        std::cout << "andato" << std::endl;
                     }
                 }
         }
+    }
+    for (auto& elem : Traces)
+    {
+        std::cout << elem.ExtremesCoord[0] << std::endl;
+        std::cout << elem.ExtremesCoord[1] << std::endl;
     }
     return 0;
 }
