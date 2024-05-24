@@ -24,24 +24,21 @@ void computePlane(Data::Fract& Fracture);
 //findTraces compute traces
 void findTraces(const Data::Fract& FirstFracture,
                 const Data::Fract& SecondFracture,
-                const Eigen::Vector3d& t,
-                std::vector<Data::Trace>& Traces);
+                const Eigen::Vector3d& t);
 
 // findExtreme: compute traces' extreme
-void findPosition(const Data::Fract& FirstFracture,
-                  const Data::Fract& SecondFracture,
+void findPosition(const Data::Fract& Fracture,
                   const Eigen::Vector3d& t,
                   const Eigen::Vector3d& P,
-                  std::vector<Data::Trace>& Traces);
+                  std::vector<Eigen::VectorXd>& CandidatePoints);
 
 //findExtreme: compute traces' extreme
-void findExtreme(const Eigen::Vector3d& V1,
+bool findExtreme(const Eigen::Vector3d& V1,
                  const Eigen::Vector3d& V2,
                  const Eigen::Vector3d& t,
                  const Eigen::Vector3d& P,
-                 const Data::Fract& SecondFracture,
-                 std::vector<Data::Trace>& Traces);
+                 Eigen::Vector3d& intersection);
 
 bool isPointInPolygon(const Eigen::Vector3d& point,
-                      const Data::Fract& polygon);
+                      const Eigen::MatrixXd& Fracture);
 }

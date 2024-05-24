@@ -4,8 +4,6 @@
 
 #include "Utils.hpp"
 
-
-
 int main()
 {
     double tol = 10e-10;
@@ -43,15 +41,10 @@ int main()
                     }
                     else // else check book case
                     {
-                        FractureOperations::findTraces(Fractures[i], Fractures[j], t, Traces);
+                        FractureOperations::findTraces(Fractures[i], Fractures[j], t);
                     }
                 }
         }
-    }
-    for (auto& elem : Traces)
-    {
-        std::cout << elem.ExtremesCoord[0] << std::endl;
-        std::cout << elem.ExtremesCoord[1] << std::endl;
     }
     return 0;
 }

@@ -15,6 +15,7 @@ struct Trace{
 };
 
 struct Fract {
+    unsigned int FractId;
     Eigen::MatrixXd vertices;
     Eigen::Vector3d normals;
     double d; //known term of the fracture
