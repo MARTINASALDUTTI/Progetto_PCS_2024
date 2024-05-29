@@ -6,8 +6,9 @@
 
 int main()
 {
-    double tol = 10e-10;
+    constexpr double tol = 10e-10;
     std::string inputFileName = "./DFN/FR3_data.txt";
+    std::string outputFileName = "./DFN/TRACE_data.txt";
 
     /*
      * creo la funzione import data a cui passo  nFracture e Fractures: un dizionario con chiave l'id e valore una struct
@@ -26,6 +27,7 @@ int main()
         std::cout << "Import successful" << std::endl;
 
     std::vector<Data::Trace> Traces;
+    unsigned int count = 0;
     // Seleziono le fratture tra cui cercare le tracce e le trovo
     for (unsigned int i = 0; i < nFracture; i++)
     {
@@ -33,18 +35,37 @@ int main()
         {
             //checking the distances between fractures
             if (FractureOperations::fracDistance(Fractures[i].vertices, Fractures[j].vertices))
+            {
+                Eigen::Vector3d t = Fractures[i].normals.cross(Fractures[j].normals);
+                if (std::abs(t[0]) < tol && std::abs(t[1]) < tol && std::abs(t[2]) < tol) // checking if the two fractures are parallel
                 {
-                    Eigen::Vector3d t = Fractures[i].normals.cross(Fractures[j].normals);
-                    if (std::abs(t[0]) < tol && std::abs(t[1]) < tol && std::abs(t[2]) < tol) // checking if the two fractures are parallel
+                    std::cout << "parallel" << std::endl;
+                }
+                else // else check book case
+                {
+                    Data::Trace foundTrace;
+                    if (FractureOperations::findTraces(Fractures[i], Fractures[j], t, foundTrace))
                     {
-                        std::cout << "parallel" << std::endl;
-                    }
-                    else // else check book case
-                    {
-                        FractureOperations::findTraces(Fractures[i], Fractures[j], t);
+                        foundTrace.TraceId = (count)++;
+                        Traces.push_back(foundTrace);
                     }
                 }
+            }
+            else if (Fractures[i].normals == Fractures[j].normals && Fractures[i].d == Fractures[j].d )
+            {
+                // BOOK CASE
+                std::cout << " book case " << std::endl;
+            }
         }
     }
+
+    if (!Data::ExportData(outputFileName, Traces))
+    {
+        std::cerr<< "error: export failed"<< std::endl;
+        return -2;
+    }
+    else
+        std::cout << "Export successful " << std::endl;
+
     return 0;
 }

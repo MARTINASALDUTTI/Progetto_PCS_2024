@@ -11,6 +11,9 @@ namespace Data{
 bool ImportData(const std::string& inputFileName,
                 unsigned int& nFracture,
                 std::vector<Data::Fract>& Fractures);
+
+bool ExportData(const std::string& outputFileName,
+                const std::vector<Data::Trace>& Traces);
 }
 
 namespace FractureOperations{
@@ -22,9 +25,10 @@ bool fracDistance(Eigen::MatrixXd& FirstFracture,
 void computePlane(Data::Fract& Fracture);
 
 //findTraces compute traces
-void findTraces(const Data::Fract& FirstFracture,
+bool findTraces(const Data::Fract& FirstFracture,
                 const Data::Fract& SecondFracture,
-                const Eigen::Vector3d& t);
+                const Eigen::Vector3d& t,
+                Data::Trace& foundTrace);
 
 // findExtreme: compute traces' extreme
 void findPosition(const Data::Fract& Fracture,
@@ -41,4 +45,15 @@ bool findExtreme(const Eigen::Vector3d& V1,
 
 bool isPointInPolygon(const Eigen::Vector3d& point,
                       const Eigen::MatrixXd& Fracture);
+
+bool isPointOnEdge(const Eigen::Vector3d& extremePoint,
+                   const Eigen::Vector3d& V1,
+                   const Eigen::Vector3d& V2);
+
+bool isTracePassing(const Eigen::MatrixXd& fracture,
+                    const Eigen::Vector3d& traceStart,
+                    const Eigen::Vector3d& traceEnd);
+
+
 }
+

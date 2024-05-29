@@ -6,18 +6,20 @@
 
 #include "Utils.hpp"
 
+constexpr double tol = 10e-10;
+
 namespace Data{
 bool ImportData(const std::string& inputFileName,
                 unsigned int& nFracture,
                 std::vector<Data::Fract>& Fractures)
-{    
+{
     //Open file
     std::ifstream file;
     file.open(inputFileName);
 
     if (file.fail())
     {
-        std::cerr<< "file open failed"<< std::endl;
+        std::cerr<< "file open failed" << std::endl;
         return false;
     }
     Data::Fract fractData;
@@ -74,6 +76,35 @@ bool ImportData(const std::string& inputFileName,
     file.close();
     return true;
 }
+
+bool ExportData(const std::string& outputFileName,
+                const std::vector<Data::Trace>& Traces)
+{
+    std::ofstream outFile(outputFileName);
+    if (!outFile.is_open()) {
+        std::cerr << "file open failed " << outputFileName << std::endl;
+        return false;
+    }
+
+    outFile << "# Number of Traces\n";
+    outFile << Traces.size() << "\n";
+
+    // Scrivi i valori delle tracce
+    for (unsigned int i = 0; i < Traces.size(); i++)
+    {
+        outFile << "# TraceId; FractureId1; FractureId2; X1; Y1; Z1; X2; Y2; Z2\n";
+
+        outFile << i << "; "
+                << Traces[i].FractureIds[0] << "; "
+                << Traces[i].FractureIds[1] << "; "
+                << (Traces[i].ExtremesCoord[0])[0] << "; " << (Traces[i].ExtremesCoord[0])[1] << "; " << (Traces[i].ExtremesCoord[0])[2]<< "; "
+                << (Traces[i].ExtremesCoord[1])[0] << "; " << (Traces[i].ExtremesCoord[1])[1] << "; " << (Traces[i].ExtremesCoord[1])[2] << "\n";
+    }
+
+    outFile.close();
+
+    return true;
+}
 }
 
 namespace FractureOperations{
@@ -128,9 +159,10 @@ void computePlane(Data::Fract& Fracture)
 
 }
 
-void findTraces(const Data::Fract& FirstFracture,
+bool findTraces(const Data::Fract& FirstFracture,
                 const Data::Fract& SecondFracture,
-                const Eigen::Vector3d& t)
+                const Eigen::Vector3d& t,
+                Data::Trace& foundTrace)
 {
     //chiedi  se escludere caso in cui l'intersezione è un solo punto
     //find the intersection line -> equation r: p+tq
@@ -158,10 +190,33 @@ void findTraces(const Data::Fract& FirstFracture,
             extremePoints.push_back(CandidatePoints[i]);
     }
 
-    for (auto& elem : extremePoints)
-        std::cout << elem.transpose() << std::endl;
-    std::cout << std::endl;
+    if (extremePoints.size() != 0)
+    {
+        std::vector<Eigen::VectorXd> extremePointsOK;
+        extremePointsOK.push_back(extremePoints[0]);
+
+        for (unsigned int i = 1; i < extremePoints.size(); i++)
+        {
+            if (extremePoints[i] != extremePoints[i-1])
+                extremePointsOK.push_back(extremePoints[i]);
+        }
+
+        foundTrace.FractureIds[0] = FirstFracture.FractId;
+        foundTrace.FractureIds[1] = SecondFracture.FractId;
+
+        foundTrace.ExtremesCoord[0] = extremePointsOK[0];
+        foundTrace.ExtremesCoord[1] = extremePointsOK[1];
+
+        foundTrace.Tips[0] = isTracePassing(FirstFracture.vertices, foundTrace.ExtremesCoord[0], foundTrace.ExtremesCoord[1]);
+        foundTrace.Tips[1] = isTracePassing(SecondFracture.vertices, foundTrace.ExtremesCoord[0], foundTrace.ExtremesCoord[1]);
+
+        foundTrace.length = (foundTrace.ExtremesCoord[0] - foundTrace.ExtremesCoord[1]).norm();
+
+        return true;
     }
+    else
+        return false;
+}
 
 void findPosition(const Data::Fract& Fracture,
                   const Eigen::Vector3d& t,
@@ -192,8 +247,8 @@ void findPosition(const Data::Fract& Fracture,
         }
 
         if (((t.dot(Fracture.vertices.col(i)-P)>= -tol)|| (t.dot(Fracture.vertices.col(i)-P)<= tol)) &&
-         ((t.dot(Fracture.vertices.col((i - 1) % Fracture.vertices.cols())-P)>= -tol)||
-          (t.dot(Fracture.vertices.col((i - 1) % Fracture.vertices.cols())-P))<= tol))
+            ((t.dot(Fracture.vertices.col((i - 1) % Fracture.vertices.cols())-P)>= -tol)||
+             (t.dot(Fracture.vertices.col((i - 1) % Fracture.vertices.cols())-P))<= tol))
         {
             Eigen::Vector3d V1 = Fracture.vertices.col(i);
             Eigen::Vector3d V2 = Fracture.vertices.col((i - 1) % Fracture.vertices.cols());
@@ -229,8 +284,8 @@ bool findExtreme(const Eigen::Vector3d& V1,
     //intersection of the line t and V1-V2
 
     if ( ((Candidate1 - Candidate2)[0] < tol && (Candidate1 - Candidate2)[0] > -tol) &&
-         ((Candidate1 - Candidate2)[1] < tol && (Candidate1 - Candidate2)[1] > -tol) &&
-         ((Candidate1 - Candidate2)[2] < tol && (Candidate1 - Candidate2)[2] > -tol))
+        ((Candidate1 - Candidate2)[1] < tol && (Candidate1 - Candidate2)[1] > -tol) &&
+        ((Candidate1 - Candidate2)[2] < tol && (Candidate1 - Candidate2)[2] > -tol))
     {
         intersection = Candidate1;
         return true;
@@ -243,7 +298,7 @@ bool findExtreme(const Eigen::Vector3d& V1,
 bool isPointInPolygon(const Eigen::Vector3d& point,
                       const Eigen::MatrixXd& Fracture)
 {
-    double tol = 1e-10;
+    //double tol = 1e-10;
 
     Eigen::Vector3d AB = Fracture.col(1) - Fracture.col(0);
     Eigen::Vector3d AD = Fracture.col(3) - Fracture.col(0);
@@ -258,44 +313,35 @@ bool isPointInPolygon(const Eigen::Vector3d& point,
     double lambda2 = dotAP_AD / dotAD_AD;
 
     return (lambda1 >= -tol && lambda1 <= 1.0+tol && lambda2 >= -tol && lambda2 <= 1+tol);
-    /*
-    bool control = true;
-    double tol = 1e-10;
-    Eigen::VectorXd lambda;
+}
 
-    Eigen::MatrixXd A(4,4);
+bool isPointOnEdge(const Eigen::Vector3d& point, const Eigen::Vector3d& V1, const Eigen::Vector3d& V2)
+{
+    double tol = 10e-10;
+    Eigen::Vector3d edge = V2 - V1;
+    Eigen::Vector3d edgeToPoint = point - V1;
+    double edgeLength = edge.norm();
+    double projectedLength = edge.dot(edgeToPoint) / edgeLength;
+    return (projectedLength >= 0 && projectedLength <= edgeLength && edgeToPoint.cross(edge).norm() < tol);
+}
 
-    A.row(0) = Fracture.row(0);
-    A.row(1) = Fracture.row(1);
-    A.row(2) = Fracture.row(2);
-    A.row(3) << 1, 1, 1, 1;
+bool isTracePassing(const Eigen::MatrixXd& fracture, const Eigen::Vector3d& traceStart, const Eigen::Vector3d& traceEnd)
+{
+    bool startOnEdge = false;
+    bool endOnEdge = false;
 
-    std::cout << A << std::endl;
+    for (unsigned int i = 0; i < fracture.cols(); ++i) {
+        Eigen::Vector3d V1 = fracture.col(i);
+        Eigen::Vector3d V2 = fracture.col((i + 1) % fracture.cols());
 
-    Eigen::Vector4d b;
-    b << point(0), point(1), point(2), 1;
-    std::cout << b << std::endl;
-
-    b.row(0) = point.row(0);
-    b.row(1) = point.row(1);
-    b.row(2) = point.row(2);
-    b.row(3) << 1;
-
-    lambda = A.colPivHouseholderQr().solve(b);
-
-    std::cout << lambda.transpose() << std::endl;
-
-    for(unsigned int i = 0; i < lambda.rows(); i++)
-    {
-        if (lambda(i) < -tol)
-            control = false;
+        if (isPointOnEdge(traceStart, V1, V2)) {
+            startOnEdge = true;
+        }
+        if (isPointOnEdge(traceEnd, V1, V2)) {
+            endOnEdge = true;
+        }
     }
-    std::cout << "control" << control << std::endl;
-    return control;
-*/
 
+    return startOnEdge && endOnEdge;
 }
 }
-
-
-
