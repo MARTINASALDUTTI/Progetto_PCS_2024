@@ -81,7 +81,8 @@ bool ExportData(const std::string& outputFileName,
                 const std::vector<Data::Trace>& Traces)
 {
     std::ofstream outFile(outputFileName);
-    if (!outFile.is_open()) {
+    if (!outFile.is_open())
+    {
         std::cerr << "file open failed " << outputFileName << std::endl;
         return false;
     }
@@ -104,6 +105,19 @@ bool ExportData(const std::string& outputFileName,
     outFile.close();
 
     return true;
+}
+
+bool ExportSecondFile(const std::string& outputFileName,
+                      const std::vector<Data::Trace>& Traces)
+{
+    std::ofstream outFile(outputFileName);
+    if (!outFile.is_open())
+    {
+        std::cerr << "file open failed " << outputFileName << std::endl;
+        return false;
+    }
+
+
 }
 }
 
@@ -343,5 +357,15 @@ bool isTracePassing(const Eigen::MatrixXd& fracture, const Eigen::Vector3d& trac
     }
 
     return startOnEdge && endOnEdge;
+}
+
+bool bookCase(const Eigen::MatrixXd& FirstFracture,
+              const Eigen::MatrixXd& SecondFracture,
+              Data::Trace& foundTrace)
+{
+    for (unsigned int i = 0; i < FirstFracture.cols(); i++)
+    {
+        std::cout << " book case " << std::endl;
+    }
 }
 }

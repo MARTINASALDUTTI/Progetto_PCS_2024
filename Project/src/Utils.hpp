@@ -14,6 +14,9 @@ bool ImportData(const std::string& inputFileName,
 
 bool ExportData(const std::string& outputFileName,
                 const std::vector<Data::Trace>& Traces);
+
+bool ExportSecondFile(const std::string& outputFileName,
+                      const std::vector<Data::Trace>& Traces);
 }
 
 namespace FractureOperations{
@@ -54,6 +57,8 @@ bool isTracePassing(const Eigen::MatrixXd& fracture,
                     const Eigen::Vector3d& traceStart,
                     const Eigen::Vector3d& traceEnd);
 
-
+bool bookCase(const Eigen::MatrixXd& FirstFracture,
+              const Eigen::MatrixXd& SecondFracture,
+              Data::Trace& foundTrace);
 }
 
