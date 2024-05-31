@@ -108,7 +108,7 @@ bool ExportData(const std::string& outputFileName,
 }
 
 bool ExportSecondFile(const std::string& outputFileName,
-                      const std::vector<Data::Fract>& Fractures,
+                      std::vector<Data::Fract>& Fractures,
                       const std::vector<Data::Trace>& Traces)
 {
     std::ofstream outFile(outputFileName);
@@ -120,13 +120,31 @@ bool ExportSecondFile(const std::string& outputFileName,
 
     for (unsigned int i = 0; i < Fractures.size(); i++ )
     {
-        if( Fractures[i].passingTracesId.size() != 0)
+        if(Fractures[i].passingTracesId.size() + Fractures[i].notPassingTracesId.size() != 0)
         {
-            for(auto& elem :Fractures[i].passingTracesId )
-                std::cout << elem << " ";
-            std::cout << std::endl;
+            outFile << "# FractureId; NumTraces\n";
+            outFile << i << "; " << Fractures[i].passingTracesId.size() + Fractures[i].notPassingTracesId.size() << "\n";
+            outFile << "# TraceId; Tips; Length\n";
+
+            if( Fractures[i].notPassingTracesId.size() != 0)
+            {
+                SortLibrary::Mergesort(Fractures[i].notPassingTracesId, Traces);
+                for(auto& elem :Fractures[i].notPassingTracesId )
+                {
+                    outFile << elem << "; " << 0 << "; " << Traces[elem].length << "\n";
+                }
+            }
+            if (Fractures[i].passingTracesId.size() != 0)
+            {
+                SortLibrary::Mergesort(Fractures[i].passingTracesId, Traces);
+                for(auto& elem :Fractures[i].passingTracesId )
+                {
+                    outFile << elem << "; " << 1 << "; " << Traces[elem].length << "\n";
+                }
+            }
         }
     }
+    return true;
 }
 }
 
@@ -405,8 +423,8 @@ bool findTraces(const Data::Fract& FirstFracture,
         foundTrace.ExtremesCoord[0] = extremePointsOK[0];
         foundTrace.ExtremesCoord[1] = extremePointsOK[1];
 
-        foundTrace.Tips[0] = isTracePassing(FirstFracture.vertices, foundTrace.ExtremesCoord[0], foundTrace.ExtremesCoord[1]);
-        foundTrace.Tips[1] = isTracePassing(SecondFracture.vertices, foundTrace.ExtremesCoord[0], foundTrace.ExtremesCoord[1]);
+        foundTrace.Tips[0] = !isTracePassing(FirstFracture.vertices, foundTrace.ExtremesCoord[0], foundTrace.ExtremesCoord[1]);
+        foundTrace.Tips[1] = !isTracePassing(SecondFracture.vertices, foundTrace.ExtremesCoord[0], foundTrace.ExtremesCoord[1]);
 
         foundTrace.length = (foundTrace.ExtremesCoord[0] - foundTrace.ExtremesCoord[1]).norm();
 
@@ -415,4 +433,78 @@ bool findTraces(const Data::Fract& FirstFracture,
     else
         return false;
 }
+}
+
+namespace SortLibrary
+{
+
+void merge(std::vector<unsigned int>& vecIdTraces, const std::vector<Data::Trace>& traces, size_t left, size_t center, size_t right)
+{
+    assert(right >= left);
+    size_t i = left;
+    size_t j = center+1;
+    size_t k = 0;
+
+    std::vector<unsigned int> tmp(right - left + 1);
+
+    while (i <= center && j <= right) {
+        if (traces[vecIdTraces[i]].length >= traces[vecIdTraces[j]].length)
+        { //cambio <= con >= per ordinare in modo decrescente e invece di prendere solo l'elemento ne guardo la lunghezza
+            assert(k < tmp.size());
+            assert(i < vecIdTraces.size());
+            tmp[k++] = vecIdTraces[i++];
+        }
+        else
+        {
+            assert(k < tmp.size());
+            assert(j < vecIdTraces.size());
+            tmp[k++] = vecIdTraces[j++];
+        }
+    }
+
+    while (i <= center)
+    {
+        assert(k < tmp.size());
+        assert(i < vecIdTraces.size());
+        tmp[k++] = vecIdTraces[i++];
+    }
+
+    while (j <= right)
+    {
+        assert(k < tmp.size());
+        assert(j < vecIdTraces.size());
+        tmp[k++] = vecIdTraces[j++];
+    }
+
+    assert(k == (right - left + 1));
+
+    for (size_t h = left; h <= right; h++)
+    {
+        vecIdTraces[h] = tmp[h-left];
+    }
+}
+
+void mergesort(std::vector<unsigned int>& vecIdTraces, const std::vector<Data::Trace>& traces, size_t left, size_t right)
+{
+    assert(left <= vecIdTraces.size());
+    assert(right <= vecIdTraces.size());
+
+    if (left < right)
+    {
+        size_t center = (left + right)/2;
+        mergesort(vecIdTraces, traces, left, center);
+        mergesort(vecIdTraces, traces, center+1, right);
+        merge(vecIdTraces, traces, left, center, right);
+    }
+
+}
+
+void Mergesort(std::vector<unsigned int>& data, const std::vector<Data::Trace>& traces)
+{
+    if (data.size()>0)
+    { //va aggiunto il controllo perché se data.size()=0 avrei come right -1 (ma size_t non può essere negativo)
+        mergesort(data, traces, 0, data.size()-1);
+    }
+}
+
 }

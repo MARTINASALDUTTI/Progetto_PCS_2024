@@ -16,7 +16,7 @@ bool ExportData(const std::string& outputFileName,
                 const std::vector<Data::Trace>& Traces);
 
 bool ExportSecondFile(const std::string& outputFileName,
-                      const std::vector<Data::Fract>& Fractures,
+                      std::vector<Data::Fract>& Fractures,
                       const std::vector<Data::Trace>& Traces);
 }
 
@@ -63,3 +63,21 @@ bool bookCase(const Data::Fract& FirstFracture,
               Data::Trace& foundTrace);
 }
 
+namespace SortLibrary
+{
+
+void merge(std::vector<unsigned int>& vecIdTraces,
+           const std::vector<Data::Trace>& traces,
+           size_t left,
+           size_t center,
+           size_t right);
+
+void mergesort(std::vector<unsigned int>& vecIdTraces,
+               const std::vector<Data::Trace>& traces,
+               size_t left,
+               size_t right);
+
+void Mergesort(std::vector<unsigned int>& data,
+               const std::vector<Data::Trace>& traces);
+
+}
