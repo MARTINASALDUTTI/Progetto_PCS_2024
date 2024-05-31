@@ -65,7 +65,6 @@ bool bookCase(const Data::Fract& FirstFracture,
 
 namespace SortLibrary
 {
-
 void merge(std::vector<unsigned int>& vecIdTraces,
            const std::vector<Data::Trace>& traces,
            size_t left,

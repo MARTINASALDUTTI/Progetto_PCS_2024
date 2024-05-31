@@ -1,21 +1,36 @@
 #pragma once
 
-#include "Eigen/Eigen"
-#include "UCDUtilities.hpp"
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+#include <gmock/gmock-matchers.h>
 
-namespace Functions
+#include "Utils.hpp"
+#include "Fracture.hpp"
+
+using namespace testing;
+
+namespace UnitTesting
 {
-// ***************************************************************************
-void export_polygons_to_paraview(const Eigen::MatrixXd& points,
-                                 const std::vector<std::vector<unsigned int>>& polygons_vertices,
-                                 const std::string& file_path)
-{
-    Gedim::UCDUtilities exporter;
+    TEST(TestFractureOperations, BookCase)
+    {
+        Data::Fract FirstFracture;
+        Eigen::MatrixXd A;
+        A << 0.0000000000000000e+00, 1.0000000000000000e+00, 1.0000000000000000e+00, 0.0000000000000000e+00,
+            0.0000000000000000e+00, 0.0000000000000000e+00, 1.0000000000000000e+00, 1.0000000000000000e+00,
+            0.0000000000000000e+00, 0.0000000000000000e+00, 0.0000000000000000e+00, 0.0000000000000000e+00;
+        FirstFracture.vertices = A;
 
-    exporter.ExportPolygons(file_path,
-                            points,
-                            polygons_vertices);
 
-}
-// ***************************************************************************
+        Data::Fract SecondFracture;
+        Eigen::MatrixXd B;
+        B << 0.0000000000000000e+00, 1.0000000000000000e+00, -1.0000000000000000e+00, 0.0000000000000000e+00,
+            0.0000000000000000e+00, 0.0000000000000000e+00, -1.0000000000000000e+00, -1.0000000000000000e+00,
+            0.0000000000000000e+00, 0.0000000000000000e+00, 0.0000000000000000e+00, 0.0000000000000000e+00;
+
+        SecondFracture.vertices = B;
+
+        Data::Trace foundTrace;
+
+        FractureOperations::bookCase(FirstFracture, SecondFracture,foundTrace);
+    }
 }
