@@ -16,6 +16,7 @@ bool ExportData(const std::string& outputFileName,
                 const std::vector<Data::Trace>& Traces);
 
 bool ExportSecondFile(const std::string& outputFileName,
+                      const std::vector<Data::Fract>& Fractures,
                       const std::vector<Data::Trace>& Traces);
 }
 

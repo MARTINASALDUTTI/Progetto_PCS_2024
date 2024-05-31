@@ -108,6 +108,7 @@ bool ExportData(const std::string& outputFileName,
 }
 
 bool ExportSecondFile(const std::string& outputFileName,
+                      const std::vector<Data::Fract>& Fractures,
                       const std::vector<Data::Trace>& Traces)
 {
     std::ofstream outFile(outputFileName);
@@ -117,7 +118,15 @@ bool ExportSecondFile(const std::string& outputFileName,
         return false;
     }
 
-
+    for (unsigned int i = 0; i < Fractures.size(); i++ )
+    {
+        if( Fractures[i].passingTracesId.size() != 0)
+        {
+            for(auto& elem :Fractures[i].passingTracesId )
+                std::cout << elem << " ";
+            std::cout << std::endl;
+        }
+    }
 }
 }
 
@@ -406,7 +415,4 @@ bool findTraces(const Data::Fract& FirstFracture,
     else
         return false;
 }
-
-
-
 }
