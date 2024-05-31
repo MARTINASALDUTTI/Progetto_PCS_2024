@@ -45,15 +45,37 @@ int main()
                 {
                     Data::Trace foundTrace;
                     if (FractureOperations::findTraces(Fractures[i], Fractures[j], t, foundTrace))
-                    {
+                    {                        
                         foundTrace.TraceId = (count)++;
                         Traces.push_back(foundTrace);
+                        if (foundTrace.Tips[0] == false)
+                            Fractures[i].passingTracesId.push_back(foundTrace.TraceId);
+                        else
+                            Fractures[i].notPassingTracesId.push_back(foundTrace.TraceId);
+                        if (foundTrace.Tips[1] == false)
+                            Fractures[j].passingTracesId.push_back(foundTrace.TraceId);
+                        else
+                            Fractures[j].notPassingTracesId.push_back(foundTrace.TraceId);
                     }
+
                 }
             }
-            else if (Fractures[i].normals == Fractures[j].normals && Fractures[i].d == Fractures[j].d )
+            else if (Fractures[i].normals == Fractures[j].normals && Fractures[i].d == Fractures[j].d ) // BOOK CASE
             {
-                // BOOK CASE
+                Data::Trace foundTrace;
+                if (FractureOperations::bookCase(Fractures[i], Fractures[j], foundTrace))
+                {
+                    foundTrace.TraceId = (count)++;
+                    Traces.push_back(foundTrace);
+                    if (foundTrace.Tips[0] == false)
+                        Fractures[i].passingTracesId.push_back(foundTrace.TraceId);
+                    else
+                        Fractures[i].notPassingTracesId.push_back(foundTrace.TraceId);
+                    if (foundTrace.Tips[1] == false)
+                        Fractures[j].passingTracesId.push_back(foundTrace.TraceId);
+                    else
+                        Fractures[j].notPassingTracesId.push_back(foundTrace.TraceId);
+                }
                 std::cout << " book case " << std::endl;
             }
         }

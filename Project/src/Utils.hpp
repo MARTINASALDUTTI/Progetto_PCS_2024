@@ -57,8 +57,8 @@ bool isTracePassing(const Eigen::MatrixXd& fracture,
                     const Eigen::Vector3d& traceStart,
                     const Eigen::Vector3d& traceEnd);
 
-bool bookCase(const Eigen::MatrixXd& FirstFracture,
-              const Eigen::MatrixXd& SecondFracture,
+bool bookCase(const Data::Fract& FirstFracture,
+              const Data::Fract& SecondFracture,
               Data::Trace& foundTrace);
 }
 

@@ -173,64 +173,6 @@ void computePlane(Data::Fract& Fracture)
 
 }
 
-bool findTraces(const Data::Fract& FirstFracture,
-                const Data::Fract& SecondFracture,
-                const Eigen::Vector3d& t,
-                Data::Trace& foundTrace)
-{
-    //chiedi  se escludere caso in cui l'intersezione è un solo punto
-    //find the intersection line -> equation r: p+tq
-
-    Eigen::MatrixXd A(3, 3);
-    A.row(0) = FirstFracture.normals;
-    A.row(1) = SecondFracture.normals;
-    A.row(2) = t;
-
-    Eigen::Vector3d b;
-    b.row(0) << FirstFracture.d;
-    b.row(1) << SecondFracture.d;
-    b.row(2) << 0;
-
-    Eigen::Vector3d P = A.colPivHouseholderQr().solve(b);
-    std::vector<Eigen::VectorXd> CandidatePoints;
-    //Eigen::Vector3d ExtremeTrace;
-    FractureOperations::findPosition(FirstFracture, t, P, CandidatePoints);
-    FractureOperations::findPosition(SecondFracture, t, P, CandidatePoints);
-
-    std::vector<Eigen::VectorXd> extremePoints;
-    for (unsigned int i = 0; i < CandidatePoints.size(); i++)
-    {
-        if (isPointInPolygon(CandidatePoints[i], FirstFracture.vertices) && isPointInPolygon(CandidatePoints[i], SecondFracture.vertices))
-            extremePoints.push_back(CandidatePoints[i]);
-    }
-
-    if (extremePoints.size() != 0)
-    {
-        std::vector<Eigen::VectorXd> extremePointsOK;
-        extremePointsOK.push_back(extremePoints[0]);
-
-        for (unsigned int i = 1; i < extremePoints.size(); i++)
-        {
-            if (extremePoints[i] != extremePoints[i-1])
-                extremePointsOK.push_back(extremePoints[i]);
-        }
-
-        foundTrace.FractureIds[0] = FirstFracture.FractId;
-        foundTrace.FractureIds[1] = SecondFracture.FractId;
-
-        foundTrace.ExtremesCoord[0] = extremePointsOK[0];
-        foundTrace.ExtremesCoord[1] = extremePointsOK[1];
-
-        foundTrace.Tips[0] = isTracePassing(FirstFracture.vertices, foundTrace.ExtremesCoord[0], foundTrace.ExtremesCoord[1]);
-        foundTrace.Tips[1] = isTracePassing(SecondFracture.vertices, foundTrace.ExtremesCoord[0], foundTrace.ExtremesCoord[1]);
-
-        foundTrace.length = (foundTrace.ExtremesCoord[0] - foundTrace.ExtremesCoord[1]).norm();
-
-        return true;
-    }
-    else
-        return false;
-}
 
 void findPosition(const Data::Fract& Fracture,
                   const Eigen::Vector3d& t,
@@ -359,13 +301,112 @@ bool isTracePassing(const Eigen::MatrixXd& fracture, const Eigen::Vector3d& trac
     return startOnEdge && endOnEdge;
 }
 
-bool bookCase(const Eigen::MatrixXd& FirstFracture,
-              const Eigen::MatrixXd& SecondFracture,
+bool bookCase(const Data::Fract& FirstFracture,
+              const Data::Fract& SecondFracture,
               Data::Trace& foundTrace)
 {
-    for (unsigned int i = 0; i < FirstFracture.cols(); i++)
+    bool check = false;
+    std::vector<Eigen::Vector3d> candidatePoints;
+    for (unsigned int i = 0; i < FirstFracture.vertices.cols(); i++)
     {
-        std::cout << " book case " << std::endl;
+        if(isPointInPolygon(FirstFracture.vertices.col(i), SecondFracture.vertices))
+            candidatePoints.push_back(FirstFracture.vertices.col(i));
     }
+    for (unsigned int i = 0; i < SecondFracture.vertices.cols(); i++)
+    {
+        if(isPointInPolygon(SecondFracture.vertices.col(i), FirstFracture.vertices))
+            candidatePoints.push_back(SecondFracture.vertices.col(i));
+    }
+    if (candidatePoints.size() != 0)
+    {
+        std::vector<Eigen::VectorXd> extremePoints;
+        extremePoints.push_back(candidatePoints[0]);
+
+        for (unsigned int i = 1; i < candidatePoints.size(); i++)
+        {
+            if (candidatePoints[i] != candidatePoints[i-1])
+                extremePoints.push_back(candidatePoints[i]);
+        }
+
+        if (extremePoints.size() == 2)
+        {
+
+        foundTrace.FractureIds[0] = FirstFracture.FractId;
+        foundTrace.FractureIds[1] = SecondFracture.FractId;
+
+        foundTrace.ExtremesCoord[0] = extremePoints[0];
+        foundTrace.ExtremesCoord[1] = extremePoints[1];
+
+        foundTrace.Tips[0] = isTracePassing(FirstFracture.vertices, foundTrace.ExtremesCoord[0], foundTrace.ExtremesCoord[1]);
+        foundTrace.Tips[1] = isTracePassing(SecondFracture.vertices, foundTrace.ExtremesCoord[0], foundTrace.ExtremesCoord[1]);
+
+        foundTrace.length = (foundTrace.ExtremesCoord[0] - foundTrace.ExtremesCoord[1]).norm();
+
+        check = true;
+        }
+    }
+    return check;
 }
+
+bool findTraces(const Data::Fract& FirstFracture,
+                const Data::Fract& SecondFracture,
+                const Eigen::Vector3d& t,
+                Data::Trace& foundTrace)
+{
+    //chiedi  se escludere caso in cui l'intersezione è un solo punto
+    //find the intersection line -> equation r: p+tq
+
+    Eigen::MatrixXd A(3, 3);
+    A.row(0) = FirstFracture.normals;
+    A.row(1) = SecondFracture.normals;
+    A.row(2) = t;
+
+    Eigen::Vector3d b;
+    b.row(0) << FirstFracture.d;
+    b.row(1) << SecondFracture.d;
+    b.row(2) << 0;
+
+    Eigen::Vector3d P = A.colPivHouseholderQr().solve(b);
+    std::vector<Eigen::VectorXd> CandidatePoints;
+    //Eigen::Vector3d ExtremeTrace;
+    FractureOperations::findPosition(FirstFracture, t, P, CandidatePoints);
+    FractureOperations::findPosition(SecondFracture, t, P, CandidatePoints);
+
+    std::vector<Eigen::VectorXd> extremePoints;
+    for (unsigned int i = 0; i < CandidatePoints.size(); i++)
+    {
+        if (isPointInPolygon(CandidatePoints[i], FirstFracture.vertices) && isPointInPolygon(CandidatePoints[i], SecondFracture.vertices))
+            extremePoints.push_back(CandidatePoints[i]);
+    }
+
+    if (extremePoints.size() != 0)
+    {
+        std::vector<Eigen::VectorXd> extremePointsOK;
+        extremePointsOK.push_back(extremePoints[0]);
+
+        for (unsigned int i = 1; i < extremePoints.size(); i++)
+        {
+            if (extremePoints[i] != extremePoints[i-1])
+                extremePointsOK.push_back(extremePoints[i]);
+        }
+
+        foundTrace.FractureIds[0] = FirstFracture.FractId;
+        foundTrace.FractureIds[1] = SecondFracture.FractId;
+
+        foundTrace.ExtremesCoord[0] = extremePointsOK[0];
+        foundTrace.ExtremesCoord[1] = extremePointsOK[1];
+
+        foundTrace.Tips[0] = isTracePassing(FirstFracture.vertices, foundTrace.ExtremesCoord[0], foundTrace.ExtremesCoord[1]);
+        foundTrace.Tips[1] = isTracePassing(SecondFracture.vertices, foundTrace.ExtremesCoord[0], foundTrace.ExtremesCoord[1]);
+
+        foundTrace.length = (foundTrace.ExtremesCoord[0] - foundTrace.ExtremesCoord[1]).norm();
+
+        return true;
+    }
+    else
+        return false;
+}
+
+
+
 }

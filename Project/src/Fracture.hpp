@@ -19,5 +19,7 @@ struct Fract {
     Eigen::MatrixXd vertices;
     Eigen::Vector3d normals;
     double d; //known term of the fracture
+    std::vector<unsigned int> passingTracesId;  // Id of passing traces in the fracture
+    std::vector<unsigned int> notPassingTracesId;    // Id of non passing traces in the fracture
 };
 }
