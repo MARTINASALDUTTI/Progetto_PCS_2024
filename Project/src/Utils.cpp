@@ -5,6 +5,7 @@
 #include "iomanip"
 
 #include "Utils.hpp"
+#include "PolygonalMesh.hpp"
 
 constexpr double tol = 10e-10;
 
