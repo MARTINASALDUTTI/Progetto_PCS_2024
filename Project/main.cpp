@@ -100,5 +100,26 @@ int main()
     else
         std::cout << "Export successful " << std::endl;
 
+    PolygonalMeshLibrary::PolygonalMesh PolygonalMesh;
+    for (unsigned int i = 0; i < Fractures.size(); i++)
+    {
+        //per ogni frattura, salvo in un unico vettore tracce passanti ordinate per lunghezza decrescente +
+        //tracce non ordinate per lunghezza decrescente
+        std::vector<unsigned int> AllTraces;
+        AllTraces.reserve(Fractures[i].passingTracesId.size() + Fractures[i].notPassingTracesId.size());
+        AllTraces.insert(AllTraces.end(), Fractures[i].passingTracesId.begin(), Fractures[i].passingTracesId.end()); // Inserisci tutti gli elementi di vec1
+        AllTraces.insert(AllTraces.end(), Fractures[i].notPassingTracesId.begin(), Fractures[i].notPassingTracesId.end());
+        Data::Fract SubFracture = Fractures[i];
+        unsigned int Cell0DId;
+        //aggiungo alla mesh i vertici della frattura
+        for(unsigned int j = 0; j < Fractures[i].vertices.cols(); j++)
+        {
+            Cell0DId = j;
+            PolygonalMesh.coord0DsCell.push_back(Fractures[i].vertices.col(j));
+            PolygonalMesh.Id0DsCell.push_back(Cell0DId);
+        }
+        //definisco ricorsivamente la funzione che fa i tagli
+        PolygonalMeshLibrary::MakeCuts(Fractures[i], AllTraces, Traces, PolygonalMesh);
+    }
     return 0;
 }

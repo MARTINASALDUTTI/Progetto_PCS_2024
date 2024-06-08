@@ -5,6 +5,7 @@
 #include "Eigen/Eigen"
 
 #include "Fracture.hpp"
+#include "PolygonalMesh.hpp"
 
 namespace Data{
 // ImportData(inputFileName, nFracture, Fractures) legge i dati dal file
@@ -78,5 +79,12 @@ void mergesort(std::vector<unsigned int>& vecIdTraces,
 
 void Mergesort(std::vector<unsigned int>& data,
                const std::vector<Data::Trace>& traces);
+}
 
+namespace PolygonalMeshLibrary
+{
+void MakeCuts(const Data::Fract& Fracture,
+              std::vector<unsigned int>& AllTraces,
+              const std::vector<Data::Trace>& traces,
+              PolygonalMeshLibrary::PolygonalMesh& PolygonalMesh);
 }
