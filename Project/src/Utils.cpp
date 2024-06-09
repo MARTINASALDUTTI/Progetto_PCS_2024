@@ -574,9 +574,9 @@ bool MakeCuts(const Data::Fract& Fracture,
             std::cout << " no passante " << std::endl;
 
         //se non è passante devo prolungare
-        std::vector<Eigen::Vector3d> estremiTracce;
         if(Passing == false)
         {
+            std::vector<Eigen::Vector3d> estremiTracce;
             bool PreviousCheck = false;
             Eigen::Vector3d congiungente = Fracture.vertices.col(0) - FirstExtreme;
             Eigen::Vector3d v= Direction.cross(congiungente);
@@ -599,20 +599,31 @@ bool MakeCuts(const Data::Fract& Fracture,
                     Eigen::Vector3d b = Fracture.vertices.col(i) - FirstExtreme;
 
                     Eigen::Vector2d paramVert = A.colPivHouseholderQr().solve(b);
-                    Eigen::Vector3d Candidate1= Fracture.vertices.col(i) + paramVert[1]*(Fracture.vertices.col(i) - Fracture.vertices.col((i - 1) % Fracture.vertices.cols())-Fracture.vertices.col(i));
+                    Eigen::Vector3d Candidate1= Fracture.vertices.col(i) + paramVert[1]*(Fracture.vertices.col((i - 1) % Fracture.vertices.cols())-Fracture.vertices.col(i));
+                    std::cout << Candidate1.transpose() << std::endl;
+
                     Eigen::Vector3d Candidate2 = FirstExtreme + paramVert[0]* Direction;
+                    std::cout << Candidate2.transpose() << std::endl;
+
                     if ( ((Candidate1 - Candidate2)[0] < tol && (Candidate1 - Candidate2)[0] > -tol) &&
                         ((Candidate1 - Candidate2)[1] < tol && (Candidate1 - Candidate2)[1] > -tol) &&
                         ((Candidate1 - Candidate2)[2] < tol && (Candidate1 - Candidate2)[2] > -tol))
-                            estremiTracce.push_back(Candidate1);
+                    {
+                        std::cout << Candidate1 << std::endl;
+                        estremiTracce.push_back(Candidate1);
+                    }
                 }
             }
             //aggiorno FirstExtreme e SecondExtreme con i prolungamenti
             //estremi tracce ha necessariamente due elementi
+            std::cout << "pippo"<< std::endl;
+            std::cout << estremiTracce.size() << std::endl;
+
+            std::cout << estremiTracce[0] << std::endl;
+            std::cout << estremiTracce[1] << std::endl;
+
             FirstExtreme = estremiTracce[0];
             SecondExtreme = estremiTracce[1];
-            std::cout << "pippo"<< std::endl;
-
         }
 
         bool side = true; //possiamo farlo int e gestrire il caso in cui si ha la traccia uscente dal vertice
