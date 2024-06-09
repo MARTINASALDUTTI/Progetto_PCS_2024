@@ -525,7 +525,7 @@ bool MakeCuts(const Data::Fract& Fracture,
     {
         //fine della ricorsione
         std::cout << " bisogna salvare il sotto poligono" << std::endl;
-        PolygonalMeshLibrary::MakeMesh(Fracture,PolygonalMesh, Cell0DId, Cell1DId);
+        //PolygonalMeshLibrary::MakeMesh(Fracture,PolygonalMesh, Cell0DId, Cell1DId);
         return false;
     }
     else
@@ -539,14 +539,13 @@ bool MakeCuts(const Data::Fract& Fracture,
             CurrentTrace = traces[*it];
             if (FractureOperations::isPointInPolygon(CurrentTrace.ExtremesCoord[0], Fracture.vertices))
             {
-                // capire come gestire traccia divisa in due
                 break;
             }
             else
             {
                 // bisogna salvare il sotto poligono e uscire dalla funzione
                 std::cout << " bisogna salvare il sotto poligono e uscire dalla funzione" << std::endl;
-                PolygonalMeshLibrary::MakeMesh(Fracture,PolygonalMesh, Cell0DId, Cell1DId);
+                //PolygonalMeshLibrary::MakeMesh(Fracture,PolygonalMesh, Cell0DId, Cell1DId);
                 return false;
             }
         }
@@ -564,77 +563,97 @@ bool MakeCuts(const Data::Fract& Fracture,
         if(variabile != Fracture.passingTracesId.end())
         {
             //creo un bool per indicare che la traccia è passante
-            bool Passing = true;
+            Passing = true;
             FirstSide.push_back(FirstExtreme);
             FirstSide.push_back(SecondExtreme);
             SecondSide.push_back(FirstExtreme);
             SecondSide.push_back(SecondExtreme);
+            std::cout << "passante " << std::endl;
         }
-        bool PreviousCheck = false;
-        if (!Passing)
+        else
+            std::cout << " no passante " << std::endl;
+
+        //se non è passante devo prolungare
+        std::vector<Eigen::Vector3d> estremiTracce;
+        if(Passing == false)
         {
-            Eigen::Vector3d vector = Fracture.vertices.col(0)-FirstExtreme;
-            //se sono da due lati distinti la terza componente ha segno +
-            if ((Direction.cross(vector))(2)>=0)
+            bool PreviousCheck = false;
+            Eigen::Vector3d congiungente = Fracture.vertices.col(0) - FirstExtreme;
+            Eigen::Vector3d v= Direction.cross(congiungente);
+            if (v.dot(Fracture.normals)>tol)
                 PreviousCheck = true;
+            for (unsigned int i = 0; i < Fracture.vertices.cols(); i++)
+            {
+                bool CurrentCheck = false;
+                Eigen::Vector3d congiungente = Fracture.vertices.col(i) - FirstExtreme;
+                Eigen::Vector3d v= Direction.cross(congiungente);
+                if (v.dot(Fracture.normals)>tol) //controlla > tol oppure >= -tol
+                    CurrentCheck = true;
+                if(PreviousCheck != CurrentCheck)
+                {
+                    //solve sistem
+                    Eigen::MatrixXd A(3,2);
+                    A.col(0) = Direction;
+                    A.col(1) = Fracture.vertices.col(i) - Fracture.vertices.col((i - 1) % Fracture.vertices.cols());
+
+                    Eigen::Vector3d b = Fracture.vertices.col(i) - FirstExtreme;
+
+                    Eigen::Vector2d paramVert = A.colPivHouseholderQr().solve(b);
+                    Eigen::Vector3d Candidate1= Fracture.vertices.col(i) + paramVert[1]*(Fracture.vertices.col(i) - Fracture.vertices.col((i - 1) % Fracture.vertices.cols())-Fracture.vertices.col(i));
+                    Eigen::Vector3d Candidate2 = FirstExtreme + paramVert[0]* Direction;
+                    if ( ((Candidate1 - Candidate2)[0] < tol && (Candidate1 - Candidate2)[0] > -tol) &&
+                        ((Candidate1 - Candidate2)[1] < tol && (Candidate1 - Candidate2)[1] > -tol) &&
+                        ((Candidate1 - Candidate2)[2] < tol && (Candidate1 - Candidate2)[2] > -tol))
+                            estremiTracce.push_back(Candidate1);
+                }
+            }
+            //aggiorno FirstExtreme e SecondExtreme con i prolungamenti
+            //estremi tracce ha necessariamente due elementi
+            FirstExtreme = estremiTracce[0];
+            SecondExtreme = estremiTracce[1];
+            std::cout << "pippo"<< std::endl;
+
         }
+
+        bool side = true; //possiamo farlo int e gestrire il caso in cui si ha la traccia uscente dal vertice
         for (unsigned int i = 0; i < Fracture.vertices.cols(); i++)
         {
-            bool CurrentCheck;
-            Eigen::Vector3d vectori = Fracture.vertices.col(i)-FirstExtreme;
-            if ((Direction.cross(vectori))(2)>= - tol)
+            Eigen::Vector3d congiungente = Fracture.vertices.col(i) - FirstExtreme;
+            Eigen::Vector3d v= Direction.cross(congiungente);
+            if (v.dot(Fracture.normals)>tol)
             {
+                //se la normale è parallela sta da un lato
                 FirstSide.push_back(Fracture.vertices.col(i));
-                bool CurrentCheck = true;
             }
-            else
+            else if (v.dot(Fracture.normals)<-tol)
             {
                 SecondSide.push_back(Fracture.vertices.col(i));
-                bool CurrentCheck = false;
-            }
-            //in questo modo divido i punti in dx e sx (devi controllare il verso antorioraio sia ok)
-            if (!Passing && (CurrentCheck != PreviousCheck))
-            {
-                //risolvo il sistema
-                Eigen::MatrixXd A(3,2);
-                A.col(0) = Direction;
-                A.col(1) = Fracture.vertices.col((i) % Fracture.vertices.cols()) - Fracture.vertices.col((i - 1) % Fracture.vertices.cols());
-
-                Eigen::Vector3d b;
-                b.row(0) << Fracture.vertices.col((i) % Fracture.vertices.cols())[0]-FirstExtreme[0];
-                b.row(1) << Fracture.vertices.col((i) % Fracture.vertices.cols())[1]-FirstExtreme[1];
-                b.row(2) << Fracture.vertices.col((i) % Fracture.vertices.cols())[2]-FirstExtreme[2];
-
-                Eigen::Vector2d paramVert = A.colPivHouseholderQr().solve(b);
-                Candidate1= Fracture.vertices.col((i) % Fracture.vertices.cols()) + paramVert[1]*(Fracture.vertices.col((i - 1) % Fracture.vertices.cols())-Fracture.vertices.col((i) % Fracture.vertices.cols()));
-                Candidate2 = FirstExtreme + paramVert[0]* Direction;
-            }
-            if ( ((Candidate1 - Candidate2)[0] < tol && (Candidate1 - Candidate2)[0] > -tol) &&
-                ((Candidate1 - Candidate2)[1] < tol && (Candidate1 - Candidate2)[1] > -tol) &&
-                ((Candidate1 - Candidate2)[2] < tol && (Candidate1 - Candidate2)[2] > -tol))
-            {
-                if(CurrentCheck== true)
-                    FirstSide.push_back(Candidate1);
-                else
-                    SecondSide.push_back(Candidate1);
             }
         }
+
         //copio std::vector in Eigen::Matrix
         Eigen::MatrixXd FirstSubPolygon(3,FirstSide.size());
+        std::cout << FirstSide.size() << std::endl;
+
         for(unsigned int k = 0; k < FirstSide.size(); k++)
         {
             FirstSubPolygon.col(k) = FirstSide[k];
         }
+        std::cout << FirstSubPolygon << std::endl;
+
         Data::Fract subpolygonuno;
         subpolygonuno.vertices = FirstSubPolygon;
         subpolygonuno.passingTracesId = Fracture.passingTracesId;
         subpolygonuno.notPassingTracesId= Fracture.notPassingTracesId;
 
         Eigen::MatrixXd SecondSubPolygon(3,SecondSide.size());
+        //std::cout << SecondSide.size() << std::endl;
         for(unsigned int k = 0; k < SecondSide.size(); k++)
         {
             SecondSubPolygon.col(k) = SecondSide[k];
         }
+        std::cout << SecondSubPolygon << std::endl;
+
         Data::Fract subpolygondue;
         subpolygondue.vertices = FirstSubPolygon;
         subpolygondue.passingTracesId = Fracture.passingTracesId;
@@ -642,70 +661,10 @@ bool MakeCuts(const Data::Fract& Fracture,
         //elimino la traccia considerata
         AllTraces.remove(CurrentTrace.TraceId); //remove elimina tutte le occorrenze... NO PROBLEM: nell nostra lista non ci sono elementi ripetuti
          //richiamo makecut per ogni sotto pologono
-        PolygonalMeshLibrary::MakeCuts(subpolygondue, AllTraces, traces, PolygonalMesh, Cell0DId, Cell1DId);
-        PolygonalMeshLibrary::MakeCuts(subpolygondue, AllTraces, traces, PolygonalMesh, Cell0DId, Cell1DId);
+        //PolygonalMeshLibrary::MakeCuts(subpolygondue, AllTraces, traces, PolygonalMesh, Cell0DId, Cell1DId);
+        //PolygonalMeshLibrary::MakeCuts(subpolygondue, AllTraces, traces, PolygonalMesh, Cell0DId, Cell1DId);
     }
     return true;
-}
-
-void MakeMesh(const Data::Fract& Fracture,
-              PolygonalMeshLibrary::PolygonalMesh& PolygonalMesh,
-              unsigned int& Cell0DId,
-              unsigned int& Cell1DId)
-{
-    /*
-     * se rimane un vector
-    auto it = std::find(vec.begin(), vec.end(), newElement);
-
-    // Se l'elemento non è trovato, it sarà uguale a vec.end()
-    if (it == vec.end()) {
-        // Aggiungi l'elemento al vettore
-        vec.push_back(newElement);
-    }
-    */
-    //aggiungere che se in dizionario è vuoto non devo controllare se c'è elemento?
-    for(unsigned int i = 0; i < Fracture.vertices.cols(); i++)
-    {
-        bool Valoregiàinserito = false;
-        for (const auto& pair : PolygonalMesh.coord0DsCellMap)
-        {
-            //se non eiste il valore il bool è falso
-            if (pair.second == Fracture.vertices.col(i))
-            {
-                Valoregiàinserito = true;
-                break;
-            }
-        }
-
-        if(!Valoregiàinserito)
-        {
-            //se non esiste aggiungo
-            PolygonalMesh.coord0DsCellMap[(Cell0DId)++] = Fracture.vertices.col(i);
-
-        }
-    }
-    //salvo i segmenti
-    for(unsigned int i = 0; i < Fracture.vertices.cols(); i++)
-    {
-        Eigen::Vector3d V1 = Fracture.vertices.col(i);
-        Eigen::Vector3d V2 = Fracture.vertices.col((i - 1) % Fracture.vertices.cols()); //-1%N = N-1 where N is a natural number
-        bool Valoregiàinserito = false;
-        for (const auto& pair : PolygonalMesh.coord1DsCellMap)
-        {
-            //se non eiste il valore il bool è falso
-            //controllo anche se è stato già salvato nel verso opposto
-            //vedere come fare questo controllo
-            if ((pair.second(0) == V1 && pair.second(1) == V2) || (pair.second(0) == V2 && pair.second(1) == 1))
-                Valoregiàinserito = true;
-        }
-
-        if(!Valoregiàinserito)
-        {
-            //se non esiste aggiungo
-            PolygonalMesh.coord1DsCellMap[(Cell1DId)++][0] = V1; //bisogna passare gli id dei vertici
-            PolygonalMesh.coord1DsCellMap[(Cell1DId)++][1] = V2;
-        }
-    }
 }
 }
 
