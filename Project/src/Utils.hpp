@@ -95,4 +95,11 @@ void MakeMesh(const Data::Fract& Fracture,
               //sicuramente non modo migliroe
               unsigned int& Cell0DId,
               unsigned int& Cell1DId);
+
+bool SolveSystem(const Eigen::Vector3d& Direction,
+                 const Eigen::Vector3d& vertice1,
+                 const Eigen::Vector3d& vertice2,
+                 const Eigen::Vector3d& point,
+                 Eigen::Vector3d& Solution);
+
 }

@@ -513,6 +513,33 @@ void Mergesort(std::vector<unsigned int>& data, const std::vector<Data::Trace>& 
 
 namespace PolygonalMeshLibrary
 {
+bool SolveSystem(const Eigen::Vector3d& Direction,
+                 const Eigen::Vector3d& vertice1,
+                 const Eigen::Vector3d& vertice2,
+                 const Eigen::Vector3d& point,
+                 Eigen::Vector3d& Solution)
+{
+    bool Flag = false;
+    Eigen::MatrixXd A(3,2);
+    A.col(0) = Direction;
+    A.col(1) = vertice1 - vertice2;
+
+    Eigen::Vector3d b = vertice1 - point;
+
+    Eigen::Vector2d paramVert = A.colPivHouseholderQr().solve(b);
+    Eigen::Vector3d Candidate1= vertice1 + paramVert[1]*(vertice2-vertice1);
+    Eigen::Vector3d Candidate2 = point + paramVert[0]* Direction;
+
+    if ( ((Candidate1 - Candidate2)[0] < tol && (Candidate1 - Candidate2)[0] > -tol) &&
+        ((Candidate1 - Candidate2)[1] < tol && (Candidate1 - Candidate2)[1] > -tol) &&
+        ((Candidate1 - Candidate2)[2] < tol && (Candidate1 - Candidate2)[2] > -tol))
+    {
+        Solution = Candidate1;
+        Flag = true;
+    }
+
+    return Flag;
+}
 bool MakeCuts(const Data::Fract& Fracture,
               std::list<unsigned int>& AllTraces,
               const std::vector<Data::Trace>& traces,
@@ -572,56 +599,73 @@ bool MakeCuts(const Data::Fract& Fracture,
         if(Passing == false)
         {
             std::vector<Eigen::Vector3d> estremiTracce;
+
             bool PreviousCheck = false;
-            Eigen::Vector3d congiungente = Fracture.vertices.col(0) - FirstExtreme;
+            Eigen::Vector3d congiungente = Fracture.vertices.col(Fracture.vertices.cols()-1) - FirstExtreme;
             Eigen::Vector3d v= Direction.cross(congiungente);
-            if (v.dot(Fracture.normals)>tol)
+            if (v.dot(Fracture.normals)>-tol)
                 PreviousCheck = true;
             for (unsigned int i = 0; i < Fracture.vertices.cols(); i++)
             {
                 /*per ogni lato ho tre opzioni
                  * 1 il primo estremo è sul lato
                  * 2 il secondo estremo è sul lato
-                 * 3 nessuno dei due estremi è sul lato, controllo se devo prolungfare
+                 * 3 nessuno dei due estremi è sul lato, controllo se devo prolungare
                  */
+                bool CurrentCheck = false;
 
                 if(FractureOperations::isPointOnEdge(FirstExtreme, Fracture.vertices.col(i), Fracture.vertices.col((i - 1) % Fracture.vertices.cols())))
                 {
                     estremiTracce.push_back(FirstExtreme);
+                    Eigen::Vector3d congiungente = Fracture.vertices.col(i) - FirstExtreme;
+                    Eigen::Vector3d v= Direction.cross(congiungente);
+                    if (v.dot(Fracture.normals)>-tol) //controlla > tol oppure >= -tol
+                        CurrentCheck = true;
                 }
                 else if(FractureOperations::isPointOnEdge(SecondExtreme, Fracture.vertices.col(i), Fracture.vertices.col((i - 1) % Fracture.vertices.cols())))
                 {
                     estremiTracce.push_back(SecondExtreme);
+                    Eigen::Vector3d congiungente = Fracture.vertices.col(i) - FirstExtreme;
+                    Eigen::Vector3d v= Direction.cross(congiungente);
+                    if (v.dot(Fracture.normals)>-tol) //controlla > tol oppure >= -tol
+                        CurrentCheck = true;
                 }
                 else
                 {
-                    bool CurrentCheck = false;
                     Eigen::Vector3d congiungente = Fracture.vertices.col(i) - FirstExtreme;
                     Eigen::Vector3d v= Direction.cross(congiungente);
-                    if (v.dot(Fracture.normals)>tol) //controlla > tol oppure >= -tol
+                    if (v.dot(Fracture.normals)>-tol) //controlla > tol oppure >= -tol
                         CurrentCheck = true;
                     if(PreviousCheck != CurrentCheck)
                     {
                         //solve sistem
-                        Eigen::MatrixXd A(3,2);
-                        A.col(0) = Direction;
-                        A.col(1) = Fracture.vertices.col(i) - Fracture.vertices.col((i - 1) % Fracture.vertices.cols());
-
-                        Eigen::Vector3d b = Fracture.vertices.col(i) - FirstExtreme;
-
-                        Eigen::Vector2d paramVert = A.colPivHouseholderQr().solve(b);
-                        Eigen::Vector3d Candidate1= Fracture.vertices.col(i) + paramVert[1]*(Fracture.vertices.col((i - 1) % Fracture.vertices.cols())-Fracture.vertices.col(i));
-
-                        Eigen::Vector3d Candidate2 = FirstExtreme + paramVert[0]* Direction;
-
-                        if ( ((Candidate1 - Candidate2)[0] < tol && (Candidate1 - Candidate2)[0] > -tol) &&
-                            ((Candidate1 - Candidate2)[1] < tol && (Candidate1 - Candidate2)[1] > -tol) &&
-                            ((Candidate1 - Candidate2)[2] < tol && (Candidate1 - Candidate2)[2] > -tol))
+                        Eigen::Vector3d Solution;
+                        if(PolygonalMeshLibrary::SolveSystem(Direction,
+                                                             Fracture.vertices.col(i),
+                                                             Fracture.vertices.col((i - 1) % Fracture.vertices.cols()),
+                                                             FirstExtreme,
+                                                             Solution))
                         {
-                            estremiTracce.push_back(Candidate1);
+                            estremiTracce.push_back(Solution);
+                        }
+                    }
+                    else if(((Direction.dot(Fracture.vertices.col(i) - FirstExtreme) >= -tol) || (Direction.dot(Fracture.vertices.col(i) - FirstExtreme) <= tol)) &&
+                            ((Direction.dot(Fracture.vertices.col((i - 1) % Fracture.vertices.cols()) - FirstExtreme) >= -tol) ||
+                             (Direction.dot(Fracture.vertices.col((i - 1) % Fracture.vertices.cols()) - FirstExtreme) <= tol)))
+                    {
+                        //solve sistem
+                        Eigen::Vector3d Solution;
+                        if(PolygonalMeshLibrary::SolveSystem(Direction,
+                                                             Fracture.vertices.col(i),
+                                                             Fracture.vertices.col((i - 1) % Fracture.vertices.cols()),
+                                                             FirstExtreme,
+                                                             Solution))
+                        {
+                            estremiTracce.push_back(Solution);
                         }
                     }
                 }
+                PreviousCheck = CurrentCheck;
             }
             //aggiorno FirstExtreme e SecondExtreme con i prolungamenti
             //estremi tracce ha necessariamente due elementi
@@ -632,6 +676,7 @@ bool MakeCuts(const Data::Fract& Fracture,
         FirstSide.push_back(FirstExtreme);
         SecondSide.push_back(FirstExtreme);
 
+        bool AnotherCheck = false;
         for (unsigned int i = 0; i < Fracture.vertices.cols(); i++)
         {
             Eigen::Vector3d congiungente = Fracture.vertices.col(i) - FirstExtreme;
@@ -645,7 +690,40 @@ bool MakeCuts(const Data::Fract& Fracture,
             {
                 SecondSide.push_back(Fracture.vertices.col(i));
             }
+            else if (v.dot(Fracture.normals)>-tol && v.dot(Fracture.normals)<tol)
+            {
+                //caso limite: il prodotto scalare fa 0
+                std::cout << "caso limite" << std::endl;
+                AnotherCheck = true;
+                break;
+            }
         }
+
+        //l'altro controllo: gestione caso limite ( valido solo per quadrati)
+        if(AnotherCheck == true)
+        {
+            Eigen::Vector3d edge = Fracture.vertices.col(0) - Fracture.vertices.col(1);
+            if(Direction.cross(edge).norm()> -tol && Direction.cross(edge).norm() < tol)
+            {
+                //std::cout << "caso pippo 1" << std::endl;
+
+                FirstSide.push_back(Fracture.vertices.col(0));
+                FirstSide.push_back(Fracture.vertices.col(1));
+                SecondSide.push_back(Fracture.vertices.col(2));
+                SecondSide.push_back(Fracture.vertices.col(3));
+            }
+            else
+            {
+                //std::cout << "caso pippo 2" << std::endl;
+
+                FirstSide.push_back(Fracture.vertices.col(1));
+                FirstSide.push_back(Fracture.vertices.col(2));
+                SecondSide.push_back(Fracture.vertices.col(3));
+                SecondSide.push_back(Fracture.vertices.col(0));
+            }
+        }
+
+        //per rispettare il verso antiorario
         FirstSide.push_back(SecondExtreme);
         SecondSide.push_back(SecondExtreme);
 
@@ -664,7 +742,6 @@ bool MakeCuts(const Data::Fract& Fracture,
         subpolygonuno.notPassingTracesId= Fracture.notPassingTracesId;
 
         Eigen::MatrixXd SecondSubPolygon(3,SecondSide.size());
-        //std::cout << SecondSide.size() << std::endl;
         for(unsigned int k = 0; k < SecondSide.size(); k++)
         {
             SecondSubPolygon.col(k) = SecondSide[k];
