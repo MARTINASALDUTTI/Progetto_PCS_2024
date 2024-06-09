@@ -83,8 +83,16 @@ void Mergesort(std::vector<unsigned int>& data,
 
 namespace PolygonalMeshLibrary
 {
-void MakeCuts(const Data::Fract& Fracture,
-              std::vector<unsigned int>& AllTraces,
+bool MakeCuts(const Data::Fract& Fracture,
+              std::list<unsigned int>& AllTraces,
               const std::vector<Data::Trace>& traces,
-              PolygonalMeshLibrary::PolygonalMesh& PolygonalMesh);
+              PolygonalMeshLibrary::PolygonalMesh& PolygonalMesh,
+              unsigned int& Cell0DId,
+              unsigned int& Cell1DId);
+
+void MakeMesh(const Data::Fract& Fracture,
+              PolygonalMeshLibrary::PolygonalMesh& PolygonalMesh,
+              //sicuramente non modo migliroe
+              unsigned int& Cell0DId,
+              unsigned int& Cell1DId);
 }
