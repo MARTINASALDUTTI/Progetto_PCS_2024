@@ -70,13 +70,13 @@ int main()
                     foundTrace.TraceId = (count)++;
                     Traces.push_back(foundTrace);
                     if (foundTrace.Tips[0] == false)
-                        Fractures[i].passingTracesId.push_back(foundTrace.TraceId);
-                    else
                         Fractures[i].notPassingTracesId.push_back(foundTrace.TraceId);
-                    if (foundTrace.Tips[1] == false)
-                        Fractures[j].passingTracesId.push_back(foundTrace.TraceId);
                     else
+                        Fractures[i].passingTracesId.push_back(foundTrace.TraceId);
+                    if (foundTrace.Tips[1] == false)
                         Fractures[j].notPassingTracesId.push_back(foundTrace.TraceId);
+                    else
+                        Fractures[j].passingTracesId.push_back(foundTrace.TraceId);
                 }
                 std::cout << " book case " << std::endl;
             }

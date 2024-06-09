@@ -128,22 +128,24 @@ bool ExportSecondFile(const std::string& outputFileName,
             outFile << i << "; " << Fractures[i].passingTracesId.size() + Fractures[i].notPassingTracesId.size() << "\n";
             outFile << "# TraceId; Tips; Length\n";
 
-            if( Fractures[i].notPassingTracesId.size() != 0)
-            {
-                SortLibrary::Mergesort(Fractures[i].notPassingTracesId, Traces);
-                for(auto& elem :Fractures[i].notPassingTracesId )
-                {
-                    outFile << elem << "; " << 0 << "; " << Traces[elem].length << "\n";
-                }
-            }
             if (Fractures[i].passingTracesId.size() != 0)
             {
                 SortLibrary::Mergesort(Fractures[i].passingTracesId, Traces);
                 for(auto& elem :Fractures[i].passingTracesId )
                 {
+                    outFile << elem << "; " << 0 << "; " << Traces[elem].length << "\n";
+                }
+            }
+
+            if( Fractures[i].notPassingTracesId.size() != 0)
+            {
+                SortLibrary::Mergesort(Fractures[i].notPassingTracesId, Traces);
+                for(auto& elem :Fractures[i].notPassingTracesId )
+                {
                     outFile << elem << "; " << 1 << "; " << Traces[elem].length << "\n";
                 }
             }
+
         }
     }
     return true;
@@ -366,8 +368,8 @@ bool bookCase(const Data::Fract& FirstFracture,
         foundTrace.ExtremesCoord[0] = extremePoints[0];
         foundTrace.ExtremesCoord[1] = extremePoints[1];
 
-        foundTrace.Tips[0] = isTracePassing(FirstFracture.vertices, foundTrace.ExtremesCoord[0], foundTrace.ExtremesCoord[1]);
-        foundTrace.Tips[1] = isTracePassing(SecondFracture.vertices, foundTrace.ExtremesCoord[0], foundTrace.ExtremesCoord[1]);
+        foundTrace.Tips[0] = !isTracePassing(FirstFracture.vertices, foundTrace.ExtremesCoord[0], foundTrace.ExtremesCoord[1]);
+        foundTrace.Tips[1] = !isTracePassing(SecondFracture.vertices, foundTrace.ExtremesCoord[0], foundTrace.ExtremesCoord[1]);
 
         foundTrace.length = (foundTrace.ExtremesCoord[0] - foundTrace.ExtremesCoord[1]).norm();
 
@@ -425,8 +427,8 @@ bool findTraces(const Data::Fract& FirstFracture,
         foundTrace.ExtremesCoord[0] = extremePointsOK[0];
         foundTrace.ExtremesCoord[1] = extremePointsOK[1];
 
-        foundTrace.Tips[0] = isTracePassing(FirstFracture.vertices, foundTrace.ExtremesCoord[0], foundTrace.ExtremesCoord[1]);
-        foundTrace.Tips[1] = isTracePassing(SecondFracture.vertices, foundTrace.ExtremesCoord[0], foundTrace.ExtremesCoord[1]);
+        foundTrace.Tips[0] = !isTracePassing(FirstFracture.vertices, foundTrace.ExtremesCoord[0], foundTrace.ExtremesCoord[1]);
+        foundTrace.Tips[1] = !isTracePassing(SecondFracture.vertices, foundTrace.ExtremesCoord[0], foundTrace.ExtremesCoord[1]);
 
         foundTrace.length = (foundTrace.ExtremesCoord[0] - foundTrace.ExtremesCoord[1]).norm();
 
@@ -564,10 +566,7 @@ bool MakeCuts(const Data::Fract& Fracture,
         {
             //creo un bool per indicare che la traccia è passante
             Passing = true;
-            std::cout << "passante " << std::endl;
         }
-        else
-            std::cout << " no passante " << std::endl;
 
         //se non è passante devo prolungare
         if(Passing == false)
@@ -589,12 +588,10 @@ bool MakeCuts(const Data::Fract& Fracture,
                 if(FractureOperations::isPointOnEdge(FirstExtreme, Fracture.vertices.col(i), Fracture.vertices.col((i - 1) % Fracture.vertices.cols())))
                 {
                     estremiTracce.push_back(FirstExtreme);
-                    std::cout << FirstExtreme.transpose() << std::endl;
                 }
                 else if(FractureOperations::isPointOnEdge(SecondExtreme, Fracture.vertices.col(i), Fracture.vertices.col((i - 1) % Fracture.vertices.cols())))
                 {
                     estremiTracce.push_back(SecondExtreme);
-                    std::cout << SecondExtreme.transpose() << std::endl;
                 }
                 else
                 {
@@ -628,16 +625,12 @@ bool MakeCuts(const Data::Fract& Fracture,
             }
             //aggiorno FirstExtreme e SecondExtreme con i prolungamenti
             //estremi tracce ha necessariamente due elementi
-            std::cout << estremiTracce.size() << std::endl;
-
             FirstExtreme = estremiTracce[0];
             SecondExtreme = estremiTracce[1];
         }
          //ho prolungato quindi nel caso di tracce passanti ho gli estremi aaltrimenti i prolungamenti
         FirstSide.push_back(FirstExtreme);
-        FirstSide.push_back(SecondExtreme);
         SecondSide.push_back(FirstExtreme);
-        SecondSide.push_back(SecondExtreme);
 
         for (unsigned int i = 0; i < Fracture.vertices.cols(); i++)
         {
@@ -653,6 +646,8 @@ bool MakeCuts(const Data::Fract& Fracture,
                 SecondSide.push_back(Fracture.vertices.col(i));
             }
         }
+        FirstSide.push_back(SecondExtreme);
+        SecondSide.push_back(SecondExtreme);
 
         //copio std::vector in Eigen::Matrix
         Eigen::MatrixXd FirstSubPolygon(3,FirstSide.size());
@@ -682,7 +677,7 @@ bool MakeCuts(const Data::Fract& Fracture,
         subpolygondue.notPassingTracesId= Fracture.notPassingTracesId;
         //elimino la traccia considerata
         AllTraces.remove(CurrentTrace.TraceId); //remove elimina tutte le occorrenze... NO PROBLEM: nell nostra lista non ci sono elementi ripetuti
-         //richiamo makecut per ogni sotto pologono
+        //richiamo makecut per ogni sotto pologono
         PolygonalMeshLibrary::MakeCuts(subpolygondue, AllTraces, traces, PolygonalMesh, Cell0DId, Cell1DId);
         PolygonalMeshLibrary::MakeCuts(subpolygondue, AllTraces, traces, PolygonalMesh, Cell0DId, Cell1DId);
     }
