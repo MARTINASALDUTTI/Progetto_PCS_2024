@@ -564,10 +564,6 @@ bool MakeCuts(const Data::Fract& Fracture,
         {
             //creo un bool per indicare che la traccia è passante
             Passing = true;
-            FirstSide.push_back(FirstExtreme);
-            FirstSide.push_back(SecondExtreme);
-            SecondSide.push_back(FirstExtreme);
-            SecondSide.push_back(SecondExtreme);
             std::cout << "passante " << std::endl;
         }
         else
@@ -584,49 +580,65 @@ bool MakeCuts(const Data::Fract& Fracture,
                 PreviousCheck = true;
             for (unsigned int i = 0; i < Fracture.vertices.cols(); i++)
             {
-                bool CurrentCheck = false;
-                Eigen::Vector3d congiungente = Fracture.vertices.col(i) - FirstExtreme;
-                Eigen::Vector3d v= Direction.cross(congiungente);
-                if (v.dot(Fracture.normals)>tol) //controlla > tol oppure >= -tol
-                    CurrentCheck = true;
-                if(PreviousCheck != CurrentCheck)
+                /*per ogni lato ho tre opzioni
+                 * 1 il primo estremo è sul lato
+                 * 2 il secondo estremo è sul lato
+                 * 3 nessuno dei due estremi è sul lato, controllo se devo prolungfare
+                 */
+
+                if(FractureOperations::isPointOnEdge(FirstExtreme, Fracture.vertices.col(i), Fracture.vertices.col((i - 1) % Fracture.vertices.cols())))
                 {
-                    //solve sistem
-                    Eigen::MatrixXd A(3,2);
-                    A.col(0) = Direction;
-                    A.col(1) = Fracture.vertices.col(i) - Fracture.vertices.col((i - 1) % Fracture.vertices.cols());
-
-                    Eigen::Vector3d b = Fracture.vertices.col(i) - FirstExtreme;
-
-                    Eigen::Vector2d paramVert = A.colPivHouseholderQr().solve(b);
-                    Eigen::Vector3d Candidate1= Fracture.vertices.col(i) + paramVert[1]*(Fracture.vertices.col((i - 1) % Fracture.vertices.cols())-Fracture.vertices.col(i));
-                    std::cout << Candidate1.transpose() << std::endl;
-
-                    Eigen::Vector3d Candidate2 = FirstExtreme + paramVert[0]* Direction;
-                    std::cout << Candidate2.transpose() << std::endl;
-
-                    if ( ((Candidate1 - Candidate2)[0] < tol && (Candidate1 - Candidate2)[0] > -tol) &&
-                        ((Candidate1 - Candidate2)[1] < tol && (Candidate1 - Candidate2)[1] > -tol) &&
-                        ((Candidate1 - Candidate2)[2] < tol && (Candidate1 - Candidate2)[2] > -tol))
+                    estremiTracce.push_back(FirstExtreme);
+                    std::cout << FirstExtreme.transpose() << std::endl;
+                }
+                else if(FractureOperations::isPointOnEdge(SecondExtreme, Fracture.vertices.col(i), Fracture.vertices.col((i - 1) % Fracture.vertices.cols())))
+                {
+                    estremiTracce.push_back(SecondExtreme);
+                    std::cout << SecondExtreme.transpose() << std::endl;
+                }
+                else
+                {
+                    bool CurrentCheck = false;
+                    Eigen::Vector3d congiungente = Fracture.vertices.col(i) - FirstExtreme;
+                    Eigen::Vector3d v= Direction.cross(congiungente);
+                    if (v.dot(Fracture.normals)>tol) //controlla > tol oppure >= -tol
+                        CurrentCheck = true;
+                    if(PreviousCheck != CurrentCheck)
                     {
-                        std::cout << Candidate1 << std::endl;
-                        estremiTracce.push_back(Candidate1);
+                        //solve sistem
+                        Eigen::MatrixXd A(3,2);
+                        A.col(0) = Direction;
+                        A.col(1) = Fracture.vertices.col(i) - Fracture.vertices.col((i - 1) % Fracture.vertices.cols());
+
+                        Eigen::Vector3d b = Fracture.vertices.col(i) - FirstExtreme;
+
+                        Eigen::Vector2d paramVert = A.colPivHouseholderQr().solve(b);
+                        Eigen::Vector3d Candidate1= Fracture.vertices.col(i) + paramVert[1]*(Fracture.vertices.col((i - 1) % Fracture.vertices.cols())-Fracture.vertices.col(i));
+
+                        Eigen::Vector3d Candidate2 = FirstExtreme + paramVert[0]* Direction;
+
+                        if ( ((Candidate1 - Candidate2)[0] < tol && (Candidate1 - Candidate2)[0] > -tol) &&
+                            ((Candidate1 - Candidate2)[1] < tol && (Candidate1 - Candidate2)[1] > -tol) &&
+                            ((Candidate1 - Candidate2)[2] < tol && (Candidate1 - Candidate2)[2] > -tol))
+                        {
+                            estremiTracce.push_back(Candidate1);
+                        }
                     }
                 }
             }
             //aggiorno FirstExtreme e SecondExtreme con i prolungamenti
             //estremi tracce ha necessariamente due elementi
-            std::cout << "pippo"<< std::endl;
             std::cout << estremiTracce.size() << std::endl;
-
-            std::cout << estremiTracce[0] << std::endl;
-            std::cout << estremiTracce[1] << std::endl;
 
             FirstExtreme = estremiTracce[0];
             SecondExtreme = estremiTracce[1];
         }
+         //ho prolungato quindi nel caso di tracce passanti ho gli estremi aaltrimenti i prolungamenti
+        FirstSide.push_back(FirstExtreme);
+        FirstSide.push_back(SecondExtreme);
+        SecondSide.push_back(FirstExtreme);
+        SecondSide.push_back(SecondExtreme);
 
-        bool side = true; //possiamo farlo int e gestrire il caso in cui si ha la traccia uscente dal vertice
         for (unsigned int i = 0; i < Fracture.vertices.cols(); i++)
         {
             Eigen::Vector3d congiungente = Fracture.vertices.col(i) - FirstExtreme;
@@ -644,7 +656,6 @@ bool MakeCuts(const Data::Fract& Fracture,
 
         //copio std::vector in Eigen::Matrix
         Eigen::MatrixXd FirstSubPolygon(3,FirstSide.size());
-        std::cout << FirstSide.size() << std::endl;
 
         for(unsigned int k = 0; k < FirstSide.size(); k++)
         {
@@ -672,8 +683,8 @@ bool MakeCuts(const Data::Fract& Fracture,
         //elimino la traccia considerata
         AllTraces.remove(CurrentTrace.TraceId); //remove elimina tutte le occorrenze... NO PROBLEM: nell nostra lista non ci sono elementi ripetuti
          //richiamo makecut per ogni sotto pologono
-        //PolygonalMeshLibrary::MakeCuts(subpolygondue, AllTraces, traces, PolygonalMesh, Cell0DId, Cell1DId);
-        //PolygonalMeshLibrary::MakeCuts(subpolygondue, AllTraces, traces, PolygonalMesh, Cell0DId, Cell1DId);
+        PolygonalMeshLibrary::MakeCuts(subpolygondue, AllTraces, traces, PolygonalMesh, Cell0DId, Cell1DId);
+        PolygonalMeshLibrary::MakeCuts(subpolygondue, AllTraces, traces, PolygonalMesh, Cell0DId, Cell1DId);
     }
     return true;
 }
