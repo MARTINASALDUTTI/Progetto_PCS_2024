@@ -593,7 +593,7 @@ bool SolveSystem(const Eigen::Vector3d& Direction,
 bool MakeCuts(std::list<unsigned int>& AllTraces,
               const std::vector<Data::Trace>& traces,
               PolygonalMeshLibrary::PolygonalMesh& PolygonalMesh,
-              std::list<Data::Fract> &AllSubPolygons)
+              std::queue<Data::Fract>& AllSubPolygons)
 {
     Eigen::Vector3d Candidate1;
     Eigen::Vector3d Candidate2;
@@ -604,11 +604,10 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
         //std::cout << "bisogna salvare il sottopoligono " << std::endl;
          // non so se bisogna aggiungere ciclare per tutti (forse sì)
         //fine della ricorsione
-
-        for (auto it = AllSubPolygons.begin(); it != AllSubPolygons.end(); ++it)
+        while(!AllSubPolygons.empty())
         {
-            Fracture = *it;
-            PolygonalMeshLibrary::CreateMesh(Fracture, PolygonalMesh);
+            PolygonalMeshLibrary::CreateMesh(AllSubPolygons.front(), PolygonalMesh);
+            AllSubPolygons.pop();
         }
         //Fracture = AllSubPolygons.front();
         //PolygonalMeshLibrary::CreateMesh(Fracture,PolygonalMesh);
@@ -658,7 +657,7 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
             std::cout << " bisogna salvare il sotto poligono e passare al prossimo sootopoligono" << std::endl;
             PolygonalMeshLibrary::CreateMesh(Fracture,PolygonalMesh);
             // Rimuovi il primo sottopoligono analizzato dalla lista
-            AllSubPolygons.pop_front();
+            AllSubPolygons.pop();
 
             //richiamo makecut per ogni sotto pologono
             PolygonalMeshLibrary::MakeCuts(AllTraces,
@@ -837,7 +836,7 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
             subpolygonuno.normals = Fracture.normals;
             //aggiungo alla fine della lista i sottopoligoni da analizzare
 
-            AllSubPolygons.insert(AllSubPolygons.end(), subpolygonuno);
+            AllSubPolygons.push(subpolygonuno);
         }
 
         if(SecondSide.size() > 2)
@@ -856,7 +855,7 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
             subpolygondue.normals = Fracture.normals;
             //aggiungo alla fine della lista i sottopoligoni da analizzare
 
-            AllSubPolygons.insert(AllSubPolygons.end(), subpolygondue);
+            AllSubPolygons.push(subpolygondue);
 
         }
 
@@ -872,7 +871,7 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
         AllTraces.remove(CurrentTrace.TraceId); //remove elimina tutte le occorrenze... NO PROBLEM: nell nostra lista non ci sono elementi ripetuti
 
         // Rimuovi il primo sottopoligono analizzato dalla lista
-        AllSubPolygons.pop_front();
+        AllSubPolygons.pop();
 
         //richiamo makecut per ogni sotto pologono
         //la chiamo una sola volta perchè uso sempre il primo sottopoligono

@@ -117,8 +117,8 @@ int main()
             std::list<unsigned int>  AllTraces;
             AllTraces.insert(AllTraces.end(), Fractures[i].passingTracesId.begin(), Fractures[i].passingTracesId.end()); // Inserisci tutti gli elementi di vec1
             AllTraces.insert(AllTraces.end(), Fractures[i].notPassingTracesId.begin(), Fractures[i].notPassingTracesId.end());
-            std::list<Data::Fract> AllSubPolygons;
-            AllSubPolygons.insert(AllSubPolygons.end(), Fractures[i]);
+            std::queue<Data::Fract> AllSubPolygons;
+            AllSubPolygons.push(Fractures[i]);
             PolygonalMeshLibrary::MakeCuts(AllTraces,
                                            Traces,
                                            PolygonalMesh,

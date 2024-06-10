@@ -3,6 +3,8 @@
 #include <iostream>
 #include <sstream>
 #include "Eigen/Eigen"
+#include <queue>
+
 
 #include "Fracture.hpp"
 #include "PolygonalMesh.hpp"
@@ -89,7 +91,7 @@ namespace PolygonalMeshLibrary
 bool MakeCuts(std::list<unsigned int>& AllTraces,
               const std::vector<Data::Trace>& traces,
               PolygonalMeshLibrary::PolygonalMesh& PolygonalMesh,
-              std::list<Data::Fract>& AllSubPolygons);
+              std::queue<Data::Fract>& AllSubPolygons);
 
 
 bool SolveSystem(const Eigen::Vector3d& Direction,
