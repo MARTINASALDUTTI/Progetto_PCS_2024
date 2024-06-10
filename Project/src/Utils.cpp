@@ -4,6 +4,8 @@
 #include "Eigen/Eigen"
 #include "iomanip"
 #include <algorithm> // Per std::find
+#include <unordered_map>
+
 
 #include "Utils.hpp"
 #include "PolygonalMesh.hpp"
@@ -541,15 +543,15 @@ bool SolveSystem(const Eigen::Vector3d& Direction,
     return Flag;
 }
 
-bool MakeCuts(const Data::Fract& Fracture,
-              std::list<unsigned int>& AllTraces,
+bool MakeCuts(std::list<unsigned int>& AllTraces,
               const std::vector<Data::Trace>& traces,
               PolygonalMeshLibrary::PolygonalMesh& PolygonalMesh,
-              unsigned int& Cell0DId,
-              unsigned int& Cell1DId)
+              std::list<Data::Fract> &AllSubPolygons)
 {
     Eigen::Vector3d Candidate1;
     Eigen::Vector3d Candidate2;
+
+    Data::Fract Fracture = AllSubPolygons.front();
 
     if (AllTraces.size() == 0)
     {
@@ -560,24 +562,45 @@ bool MakeCuts(const Data::Fract& Fracture,
     }
     else
     {
+        if(AllSubPolygons.size() == 0)
+        {
+            std::cout << "abbiamo un problema qui" << std::endl;
+        }
         //seleziono la traccia più lunga
         //forse meglio lista
         Data::Trace CurrentTrace;
         //se metto reference vicino ad auto mi fa errore
+        bool FineRicorsione = true;
         for (auto it = AllTraces.begin(); it != AllTraces.end(); ++it)
         {
             CurrentTrace = traces[*it];
             if (FractureOperations::isPointInPolygon(CurrentTrace.ExtremesCoord[0], Fracture.vertices))
             {
+                /*quando la traccia è interna al sottopoligono
+                 * FineRicorsione diventa false ed esco dal ciclo
+                 * altrimenti controllo se la traccia successiva è interns al poligonp
+                 * Se non trovo questa traccia passo al poligonp suvccessivo
+                 * FineRicorsione diventa true
+                */
+                FineRicorsione = false;
+                //vedere se usare break (pericoloso o un if su fine ricorsione)
                 break;
             }
-            else
-            {
-                // bisogna salvare il sotto poligono e uscire dalla funzione
-                std::cout << " bisogna salvare il sotto poligono e uscire dalla funzione" << std::endl;
-                //PolygonalMeshLibrary::MakeMesh(Fracture,PolygonalMesh, Cell0DId, Cell1DId);
-                return false;
-            }
+        }
+        if(FineRicorsione == true)
+        {
+            // bisogna salvare il sotto poligono e uscire dalla funzione
+            std::cout << " bisogna salvare il sotto poligono e passare al prossimo sootopoligono" << std::endl;
+            //PolygonalMeshLibrary::MakeMesh(Fracture,PolygonalMesh, Cell0DId, Cell1DId);
+            // Rimuovi il primo sottopoligono analizzato dalla lista
+            AllSubPolygons.pop_front();
+
+            //richiamo makecut per ogni sotto pologono
+            PolygonalMeshLibrary::MakeCuts(AllTraces,
+                                           traces,
+                                           PolygonalMesh,
+                                           AllSubPolygons);
+            return false;
         }
         //estraggo gli estremi e individuo la direzione sulla quale giace la traccia
         Eigen::Vector3d FirstExtreme = CurrentTrace.ExtremesCoord[0];
@@ -589,6 +612,7 @@ bool MakeCuts(const Data::Fract& Fracture,
         std::vector<Eigen::Vector3d> SecondSide;
         //se la traccia è passante già ho gli estremi che appartegono ad entrambi i poligoni
         bool Passing = false;
+        //tramite tip
         auto variabile = std::find(Fracture.passingTracesId.begin(), Fracture.passingTracesId.end(), CurrentTrace.TraceId);
         if(variabile != Fracture.passingTracesId.end())
         {
@@ -731,38 +755,122 @@ bool MakeCuts(const Data::Fract& Fracture,
         //copio std::vector in Eigen::Matrix
         Eigen::MatrixXd FirstSubPolygon(3,FirstSide.size());
 
-        for(unsigned int k = 0; k < FirstSide.size(); k++)
+        //bisogna capire perchè escono poligoni da 2
+        if(FirstSide.size() > 2)
         {
-            FirstSubPolygon.col(k) = FirstSide[k];
-        }
-        std::cout << FirstSubPolygon << std::endl;
+            for(unsigned int k = 0; k < FirstSide.size(); k++)
+            {
+                FirstSubPolygon.col(k) = FirstSide[k];
+            }
+            //std::cout << FirstSubPolygon << std::endl;
+            Data::Fract subpolygonuno;
+            subpolygonuno.vertices = FirstSubPolygon;
+            subpolygonuno.passingTracesId = Fracture.passingTracesId;
+            subpolygonuno.notPassingTracesId= Fracture.notPassingTracesId;
+            subpolygonuno.normals = Fracture.normals;
+            //aggiungo alla fine della lista i sottopoligoni da analizzare
 
-        Data::Fract subpolygonuno;
-        subpolygonuno.vertices = FirstSubPolygon;
-        subpolygonuno.passingTracesId = Fracture.passingTracesId;
-        subpolygonuno.notPassingTracesId= Fracture.notPassingTracesId;
-        subpolygonuno.normals = Fracture.normals;
+            AllSubPolygons.insert(AllSubPolygons.end(), subpolygonuno);
+        }
+
+
 
         Eigen::MatrixXd SecondSubPolygon(3,SecondSide.size());
-        for(unsigned int k = 0; k < SecondSide.size(); k++)
-        {
-            SecondSubPolygon.col(k) = SecondSide[k];
-        }
-        std::cout << SecondSubPolygon << std::endl;
 
-        Data::Fract subpolygondue;
-        subpolygondue.vertices = FirstSubPolygon;
-        subpolygondue.passingTracesId = Fracture.passingTracesId;
-        subpolygondue.notPassingTracesId= Fracture.notPassingTracesId;
-        subpolygondue.normals = Fracture.normals;
+        if(SecondSide.size() > 2)
+        {
+            for(unsigned int k = 0; k < SecondSide.size(); k++)
+            {
+                SecondSubPolygon.col(k) = SecondSide[k];
+            }
+            //std::cout << SecondSubPolygon << std::endl;
+            Data::Fract subpolygondue;
+            subpolygondue.vertices = FirstSubPolygon;
+            subpolygondue.passingTracesId = Fracture.passingTracesId;
+            subpolygondue.notPassingTracesId= Fracture.notPassingTracesId;
+            subpolygondue.normals = Fracture.normals;
+            //aggiungo alla fine della lista i sottopoligoni da analizzare
+
+            AllSubPolygons.insert(AllSubPolygons.end(), subpolygondue);
+
+        }
 
         //elimino la traccia considerata
         AllTraces.remove(CurrentTrace.TraceId); //remove elimina tutte le occorrenze... NO PROBLEM: nell nostra lista non ci sono elementi ripetuti
+        //std::cout << SecondSubPolygon << std::endl;
+
+        // Rimuovi il primo sottopoligono analizzato dalla lista
+        AllSubPolygons.pop_front();
+
         //richiamo makecut per ogni sotto pologono
-        PolygonalMeshLibrary::MakeCuts(subpolygonuno, AllTraces, traces, PolygonalMesh, Cell0DId, Cell1DId);
-        PolygonalMeshLibrary::MakeCuts(subpolygondue, AllTraces, traces, PolygonalMesh, Cell0DId, Cell1DId);
+        //la chiamo una sola volta perchè uso sempre il primo sottopoligono
+
+        PolygonalMeshLibrary::MakeCuts(AllTraces,
+                                       traces,
+                                       PolygonalMesh,
+                                       AllSubPolygons);
     }
     return true;
+}
+
+void CreateMesh(const Data::Fract& Fracture,
+                PolygonalMeshLibrary::PolygonalMesh& PolygonalMesh)
+{
+    //salvo i vertici
+    std::vector<Eigen::Vector3d> coord0DsCell;
+
+    for(unsigned int i = 0; i < Fracture.vertices.cols(); i++)
+    {
+        auto variabile = std::find(PolygonalMesh.coord0DsCell.begin(), PolygonalMesh.coord0DsCell.end(), Fracture.vertices.col(i));
+        if(variabile == PolygonalMesh.coord0DsCell.end())
+        {
+            //se punta a PolygonalMesh.coord0DsCell.end() cevo aggiungere
+            coord0DsCell.push_back(Fracture.vertices.col(i));
+        }
+    }
+
+    /*
+    for(unsigned int i = 0; i < Fracture.vertices.cols(); i++)
+    {
+
+        auto variabile1 = std::find(PolygonalMesh.coord1DsCell.begin(), PolygonalMesh.coord0DsCell.end(), Fracture.vertices.col(i));
+        auto variabile2 = std::find(PolygonalMesh.coord1DsCell.begin(), PolygonalMesh.coord0DsCell.end(), Fracture.vertices.col(i));
+
+        if(variabile == PolygonalMesh.coord0DsCell.end())
+        {
+            //se punta a PolygonalMesh.coord0DsCell.end() cevo aggiungere
+            coord0DsCell.push_back(Fracture.vertices.col(i));
+        }
+    }
+
+    std::unordered_map<Eigen::Vector3d*, unsigned int> coord0DsCellMap; //ha senso??
+    //metodo esercitazione 5
+    for(unsigned int i = 0; i < Fracture.vertices.cols(); i++)
+    {
+        const Eigen::Vector3d* vertice = &Fracture.vertices.col(i);
+
+        //se la chiuave già esiste ret.second = false
+        auto ret = PolygonalMesh.coord0DsCellMap.insert({vertice, {Cell0DId}});
+        if(ret.second)
+            Cell0DId++;
+    }
+    PolygonalMesh.coord0DsCellMap = coord0DsCellMap;
+    */
+    //una volta salvati i vertici, passo ai lati
+    /*
+    std::unordered_map<unsigned int, std::array<unsigned int, 2>> coord1DsCellMap;
+    for(unsigned int i = 0; i < Fracture.vertices.cols(); i++)
+    {
+        unsigned int FirstId = coord0DsCellMap.find(Fracture.vertices.col(i)) ;
+        unsigned int SecondId = coord0DsCellMap.find(Fracture.vertices.col(i) % Fracture.vertices.cols()) ;
+        std::array<unsigned int, 2> value = {FirstId, SecondId};
+        if (!containsValue(coord1DsCellMap, value))
+        {
+            coord1DsCellMap[(Cell1DId)++] = value; // Usa l'indice i come chiave
+        }
+    }
+    PolygonalMesh.coord1DsCellMap = coord1DsCellMap;
+    */
 }
 }
 

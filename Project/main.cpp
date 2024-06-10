@@ -7,7 +7,7 @@
 int main()
 {
     constexpr double tol = 10e-10;
-    std::string inputFileName = "./DFN/FR3_data.txt";
+    std::string inputFileName = "./DFN/FR10_data.txt";
     std::string outputFileName = "./DFN/TRACE_data.txt";
     std::string outputFileName2 = "./DFN/Output2.txt";
 
@@ -101,8 +101,10 @@ int main()
     else
         std::cout << "Export successful " << std::endl;
     //secondo me bisogna creare un std::vector di PolygonalMesh e riservare tanto spazio quanrto le fratture
-    PolygonalMeshLibrary::PolygonalMesh PolygonalMesh;
 
+    std::vector<PolygonalMeshLibrary::PolygonalMesh> Meshes;
+    Meshes.reserve(Fractures.size());
+    /*
     for (unsigned int i = 0; i < Fractures.size(); i++)
     {
         //per ogni frattura, salvo in un unico vettore tracce passanti ordinate per lunghezza decrescente +
@@ -110,16 +112,35 @@ int main()
         std::list<unsigned int>  AllTraces;
         AllTraces.insert(AllTraces.end(), Fractures[i].passingTracesId.begin(), Fractures[i].passingTracesId.end()); // Inserisci tutti gli elementi di vec1
         AllTraces.insert(AllTraces.end(), Fractures[i].notPassingTracesId.begin(), Fractures[i].notPassingTracesId.end());
-        unsigned int Cell0DId;
-        unsigned int Cell1DId;
+        PolygonalMeshLibrary::PolygonalMesh PolygonalMesh;
+        std::list<Data::Fract> AllSubPolygons;
+        AllSubPolygons.insert(AllSubPolygons.end(), Fractures[i]);
         //definisco ricorsivamente la funzione che fa i tagli
-        PolygonalMeshLibrary::MakeCuts(Fractures[i], AllTraces, Traces, PolygonalMesh, Cell0DId, Cell1DId);
+        PolygonalMeshLibrary::MakeCuts(AllTraces,
+                                       Traces,
+                                       PolygonalMesh,
+                                       AllSubPolygons);
         //oppure Cell0DId+1 (forse meglio);
-        PolygonalMesh.Num0DsCell = PolygonalMesh.coord0DsCellMap.size();
-        PolygonalMesh.Num1DsCell = PolygonalMesh.coord1DsCellMap.size();
+        PolygonalMesh.Num0DsCell = PolygonalMesh.coord0DsCell.size();
+        PolygonalMesh.Num1DsCell = PolygonalMesh.coord1DsCell.size();
         std::cout << i ;
         std::cout << std::endl;
+        Meshes.push_back(PolygonalMesh);
     }
+    */
 
+    std::list<unsigned int>  AllTraces;
+    AllTraces.insert(AllTraces.end(), Fractures[0].passingTracesId.begin(), Fractures[0].passingTracesId.end()); // Inserisci tutti gli elementi di vec1
+    AllTraces.insert(AllTraces.end(), Fractures[0].notPassingTracesId.begin(), Fractures[0].notPassingTracesId.end());
+    PolygonalMeshLibrary::PolygonalMesh PolygonalMesh;
+    std::list<Data::Fract> AllSubPolygons;
+    AllSubPolygons.insert(AllSubPolygons.end(), Fractures[0]);
+    //definisco ricorsivamente la funzione che fa i tagli
+    PolygonalMeshLibrary::MakeCuts(AllTraces,
+                                   Traces,
+                                   PolygonalMesh,
+                                   AllSubPolygons);
+
+    //controlla frattura 1 file 10
     return 0;
 }
