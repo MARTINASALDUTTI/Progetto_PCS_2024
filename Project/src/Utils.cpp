@@ -562,10 +562,7 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
     }
     else
     {
-        if(AllSubPolygons.size() == 0)
-        {
-            std::cout << "abbiamo un problema qui" << std::endl;
-        }
+        std::cout << "abbiamo un problema qui" << std::endl;
         //seleziono la traccia più lunga
         //forse meglio lista
         Data::Trace CurrentTrace;
