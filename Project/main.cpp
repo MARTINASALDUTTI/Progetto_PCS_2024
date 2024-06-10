@@ -7,7 +7,7 @@
 int main()
 {
     constexpr double tol = 10e-10;
-    std::string inputFileName = "./DFN/FR10_data.txt";
+    std::string inputFileName = "./DFN/FR3_data.txt";
     std::string outputFileName = "./DFN/TRACE_data.txt";
     std::string outputFileName2 = "./DFN/Output2.txt";
 
@@ -16,7 +16,6 @@ int main()
     contenente numero di vertici e coordinate
     */
     unsigned int nFracture = 0;
-    //std::map<unsigned int, DFNlibrary::DFNdata> Fractures;
     std::vector<Data::Fract> Fractures;
 
     if (!Data::ImportData(inputFileName, nFracture, Fractures))
@@ -104,43 +103,46 @@ int main()
 
     std::vector<PolygonalMeshLibrary::PolygonalMesh> Meshes;
     Meshes.reserve(Fractures.size());
-    /*
+
     for (unsigned int i = 0; i < Fractures.size(); i++)
     {
         //per ogni frattura, salvo in un unico vettore tracce passanti ordinate per lunghezza decrescente +
         //tracce non ordinate per lunghezza decrescente
-        std::list<unsigned int>  AllTraces;
-        AllTraces.insert(AllTraces.end(), Fractures[i].passingTracesId.begin(), Fractures[i].passingTracesId.end()); // Inserisci tutti gli elementi di vec1
-        AllTraces.insert(AllTraces.end(), Fractures[i].notPassingTracesId.begin(), Fractures[i].notPassingTracesId.end());
+
         PolygonalMeshLibrary::PolygonalMesh PolygonalMesh;
-        std::list<Data::Fract> AllSubPolygons;
-        AllSubPolygons.insert(AllSubPolygons.end(), Fractures[i]);
         //definisco ricorsivamente la funzione che fa i tagli
-        PolygonalMeshLibrary::MakeCuts(AllTraces,
-                                       Traces,
-                                       PolygonalMesh,
-                                       AllSubPolygons);
+        std::cout << "frattura numero: " << i << std::endl;
+        if (Fractures[i].passingTracesId.size() + Fractures[i].notPassingTracesId.size()!= 0)
+        {
+            std::list<unsigned int>  AllTraces;
+            AllTraces.insert(AllTraces.end(), Fractures[i].passingTracesId.begin(), Fractures[i].passingTracesId.end()); // Inserisci tutti gli elementi di vec1
+            AllTraces.insert(AllTraces.end(), Fractures[i].notPassingTracesId.begin(), Fractures[i].notPassingTracesId.end());
+            std::list<Data::Fract> AllSubPolygons;
+            AllSubPolygons.insert(AllSubPolygons.end(), Fractures[i]);
+            PolygonalMeshLibrary::MakeCuts(AllTraces,
+                                           Traces,
+                                           PolygonalMesh,
+                                           AllSubPolygons);
+        }
+        //in caso si può chiamare direttamente createmesh
         //oppure Cell0DId+1 (forse meglio);
         PolygonalMesh.Num0DsCell = PolygonalMesh.coord0DsCell.size();
         PolygonalMesh.Num1DsCell = PolygonalMesh.coord1DsCell.size();
-        std::cout << i ;
-        std::cout << std::endl;
         Meshes.push_back(PolygonalMesh);
     }
-    */
 
+    /*
     std::list<unsigned int>  AllTraces;
-    AllTraces.insert(AllTraces.end(), Fractures[0].passingTracesId.begin(), Fractures[0].passingTracesId.end()); // Inserisci tutti gli elementi di vec1
-    AllTraces.insert(AllTraces.end(), Fractures[0].notPassingTracesId.begin(), Fractures[0].notPassingTracesId.end());
+    AllTraces.insert(AllTraces.end(), Fractures[2].passingTracesId.begin(), Fractures[2].passingTracesId.end()); // Inserisci tutti gli elementi di vec1
+    AllTraces.insert(AllTraces.end(), Fractures[2].notPassingTracesId.begin(), Fractures[2].notPassingTracesId.end());
     PolygonalMeshLibrary::PolygonalMesh PolygonalMesh;
     std::list<Data::Fract> AllSubPolygons;
-    AllSubPolygons.insert(AllSubPolygons.end(), Fractures[0]);
+    AllSubPolygons.insert(AllSubPolygons.end(), Fractures[2]);
     //definisco ricorsivamente la funzione che fa i tagli
     PolygonalMeshLibrary::MakeCuts(AllTraces,
                                    Traces,
                                    PolygonalMesh,
                                    AllSubPolygons);
-
-    //controlla frattura 1 file 10
+    */
     return 0;
 }
