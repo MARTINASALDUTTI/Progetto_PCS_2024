@@ -887,23 +887,76 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
 void CreateMesh(const Data::Fract& Fracture,
                 PolygonalMeshLibrary::PolygonalMesh& PolygonalMesh)
 {
-    std::cout << Fracture.vertices << std::endl;
-    std::cout << std::endl;
+    //std::cout << Fracture.vertices << std::endl;
+    //std::cout << std::endl;
 
+    std::vector<unsigned int> IdVectices;
     //salvo i vertici
-    /*
-    std::vector<Eigen::Vector3d> coord0DsCell;
-
     for(unsigned int i = 0; i < Fracture.vertices.cols(); i++)
     {
         auto variabile = std::find(PolygonalMesh.coord0DsCell.begin(), PolygonalMesh.coord0DsCell.end(), Fracture.vertices.col(i));
         if(variabile == PolygonalMesh.coord0DsCell.end())
         {
             //se punta a PolygonalMesh.coord0DsCell.end() cevo aggiungere
-            coord0DsCell.push_back(Fracture.vertices.col(i));
+            PolygonalMesh.coord0DsCell.push_back(Fracture.vertices.col(i));
+            IdVectices.push_back(PolygonalMesh.coord0DsCell.size());
+        }
+        else
+        {
+            unsigned int position = std::distance(PolygonalMesh.coord0DsCell.begin(), variabile);
+            IdVectices.push_back(position);
         }
     }
-*/
+
+
+    /* ho pensato una cvosa ,a non so se può avere senso (fammi sap)
+     * noi per ogni polignono, cicliamo sui vertici e  salviamo l'id in Polygonal mesh
+     * poi per ogni polignono, cicliamo sui lati e  salviamo le coordinate in Polygonal mesh (dovremmo salvare gli Id)
+     * se facessimo così:
+     * per ogni polignono, cicliamo sui vertici e  salviamo l'id in Polygonal mesh e li salviamo in un vector o lista
+     * tramite l'indice di PolygonalMesh.coord0DsCell
+     * poi cicliamo for(unsigned int i = 0; i < Fracture.vertices.cols(); i++) e con i accediamo all'indice
+     */
+     // secondo me, l'ideale sarebbe usare un std::map a cui accedere con chiave l'id perchè è più basse il costo del find ma non ho capito come si fa a cercare per valore
+    /* con queto ciclo salvo le coordinate degli estremi ma in teoria non serve
+    for(unsigned int i = 0; i < Fracture.vertices.cols(); i++)
+    {
+        std::array<Eigen::Vector3d, 2> edge1 = {Fracture.vertices.col(i), Fracture.vertices.col((i - 1) % Fracture.vertices.cols())};
+        std::array<Eigen::Vector3d, 2> edge2 = {Fracture.vertices.col((i - 1) % Fracture.vertices.cols()), Fracture.vertices.col(i)};
+        auto variabile1 = std::find(PolygonalMesh.coord1DsCell.begin(), PolygonalMesh.coord1DsCell.end(), edge1);
+        auto variabile2 = std::find(PolygonalMesh.coord1DsCell.begin(), PolygonalMesh.coord1DsCell.end(), edge2);
+
+        if(variabile1 == PolygonalMesh.coord1DsCell.end() && variabile2 == PolygonalMesh.coord1DsCell.end() )
+        {
+            //se punta a PolygonalMesh.coord0DsCell.end() cevo aggiungere
+            PolygonalMesh.coord1DsCell.push_back(edge1);
+        }
+    }
+    */
+
+    std::vector<unsigned int> IdEdge;
+
+    for(unsigned int i = 0; i < Fracture.vertices.cols(); i++)
+    {
+        std::array<unsigned int, 2> edge1 = {IdVectices[i], IdVectices[(i-1) % Fracture.vertices.cols()]};
+        std::array<unsigned int, 2> edge2 = {IdVectices[(i-1) % Fracture.vertices.cols()], IdVectices[i]};
+        auto variabile1 = std::find(PolygonalMesh.coord1DsCell_Id0DS.begin(), PolygonalMesh.coord1DsCell_Id0DS.end(), edge1);
+        auto variabile2 = std::find(PolygonalMesh.coord1DsCell_Id0DS.begin(), PolygonalMesh.coord1DsCell_Id0DS.end(), edge2);
+        if(variabile1 == PolygonalMesh.coord1DsCell_Id0DS.end() && variabile2 == PolygonalMesh.coord1DsCell_Id0DS.end() )
+        {
+            //se punta a PolygonalMesh.coord0DsCell.end() cevo aggiungere
+            PolygonalMesh.coord1DsCell_Id0DS.push_back(edge1);
+            IdEdge.push_back(PolygonalMesh.coord0DsCell.size());
+        }
+        else
+        {
+            unsigned int position = std::distance(PolygonalMesh.coord1DsCell_Id0DS.begin(), variabile1);
+            IdEdge.push_back(position);
+        }
+    }
+
+    PolygonalMesh.Cell2DsVertices.push_back(IdVectices);
+    PolygonalMesh.Cell2DsEdges.push_back(IdEdge);
 
     /*
     for(unsigned int i = 0; i < Fracture.vertices.cols(); i++)

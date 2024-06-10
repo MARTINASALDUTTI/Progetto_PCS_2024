@@ -30,12 +30,17 @@ struct PolygonalMesh{
     unsigned int Num1DsCell;
     //std::unordered_map<unsigned int, std::array<unsigned int, 2>> coord1DsCellMap;
     //std::vector<unsigned int> Id1DsCell;
-    std::vector<std::array<unsigned int, 2>> coord1DsCell;
+    std::vector<std::array<Eigen::Vector3d, 2>> coord1DsCell;
+    std::vector<std::array<unsigned int, 2>> coord1DsCell_Id0DS;
+
 
     unsigned int Num2DsCell;
     std::vector<std::vector<unsigned int>> Id2DsCell;
-    std::vector<std::array<unsigned int, 3>> Cell2DssVertices = {}; ///< Cell2D Vertices indices, size 1 x NumberCell2DVertices[NumberCell2D]
-    std::vector<std::array<unsigned int, 3>> Cell2DsEdges = {}; ///< Cell2D Cell1D indices, size 1 x NumberCell2DEdges[NumberCell2D]
+    //perchè stiamo salvando std::array<unsigned int, 3>, cioè perchè 3????
+    //std::vector<std::array<unsigned int, 3>> Cell2DssVertices = {}; ///< Cell2D Vertices indices, size 1 x NumberCell2DVertices[NumberCell2D]
+    //std::vector<std::array<unsigned int, 3>> Cell2DsEdges = {}; ///< Cell2D Cell1D indices, size 1 x NumberCell2DEdges[NumberCell2D]
+    std::vector<std::vector<unsigned int>> Cell2DsVertices = {};
+    std::vector<std::vector<unsigned int>> Cell2DsEdges = {};
 };
 }
 

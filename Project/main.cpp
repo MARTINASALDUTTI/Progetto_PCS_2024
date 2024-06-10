@@ -128,7 +128,19 @@ int main()
         //oppure Cell0DId+1 (forse meglio);
         PolygonalMesh.Num0DsCell = PolygonalMesh.coord0DsCell.size();
         PolygonalMesh.Num1DsCell = PolygonalMesh.coord1DsCell.size();
+
+        /*
         Meshes.push_back(PolygonalMesh);
+        unsigned int j = 0;
+        for (auto& elem : PolygonalMesh.coord0DsCell )
+            std::cout << j++ << " " << elem.transpose() << " " << std::endl;
+        std::cout << std::endl;
+        */
+        Meshes.push_back(PolygonalMesh);
+        unsigned int j = 0;
+        for (auto& elem : PolygonalMesh.coord1DsCell_Id0DS )
+            std::cout << j++ << " " << elem[0] << " " << elem[1] << std::endl;
+        std::cout << std::endl;
     }
 
     /*
