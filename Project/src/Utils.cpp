@@ -540,6 +540,7 @@ bool SolveSystem(const Eigen::Vector3d& Direction,
 
     return Flag;
 }
+
 bool MakeCuts(const Data::Fract& Fracture,
               std::list<unsigned int>& AllTraces,
               const std::vector<Data::Trace>& traces,
@@ -740,6 +741,7 @@ bool MakeCuts(const Data::Fract& Fracture,
         subpolygonuno.vertices = FirstSubPolygon;
         subpolygonuno.passingTracesId = Fracture.passingTracesId;
         subpolygonuno.notPassingTracesId= Fracture.notPassingTracesId;
+        subpolygonuno.normals = Fracture.normals;
 
         Eigen::MatrixXd SecondSubPolygon(3,SecondSide.size());
         for(unsigned int k = 0; k < SecondSide.size(); k++)
@@ -752,10 +754,12 @@ bool MakeCuts(const Data::Fract& Fracture,
         subpolygondue.vertices = FirstSubPolygon;
         subpolygondue.passingTracesId = Fracture.passingTracesId;
         subpolygondue.notPassingTracesId= Fracture.notPassingTracesId;
+        subpolygondue.normals = Fracture.normals;
+
         //elimino la traccia considerata
         AllTraces.remove(CurrentTrace.TraceId); //remove elimina tutte le occorrenze... NO PROBLEM: nell nostra lista non ci sono elementi ripetuti
         //richiamo makecut per ogni sotto pologono
-        PolygonalMeshLibrary::MakeCuts(subpolygondue, AllTraces, traces, PolygonalMesh, Cell0DId, Cell1DId);
+        PolygonalMeshLibrary::MakeCuts(subpolygonuno, AllTraces, traces, PolygonalMesh, Cell0DId, Cell1DId);
         PolygonalMeshLibrary::MakeCuts(subpolygondue, AllTraces, traces, PolygonalMesh, Cell0DId, Cell1DId);
     }
     return true;

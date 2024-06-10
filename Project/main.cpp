@@ -40,6 +40,7 @@ int main()
                 Eigen::Vector3d t = Fractures[i].normals.cross(Fractures[j].normals);
                 if (std::abs(t[0]) < tol && std::abs(t[1]) < tol && std::abs(t[2]) < tol) // checking if the two fractures are parallel
                 {
+                    //bisogna togliere la stampa
                     std::cout << "parallel" << std::endl;
                 }
                 else // else check book case
@@ -109,7 +110,6 @@ int main()
         std::list<unsigned int>  AllTraces;
         AllTraces.insert(AllTraces.end(), Fractures[i].passingTracesId.begin(), Fractures[i].passingTracesId.end()); // Inserisci tutti gli elementi di vec1
         AllTraces.insert(AllTraces.end(), Fractures[i].notPassingTracesId.begin(), Fractures[i].notPassingTracesId.end());
-        Data::Fract SubFracture = Fractures[i];
         unsigned int Cell0DId;
         unsigned int Cell1DId;
         //definisco ricorsivamente la funzione che fa i tagli
@@ -117,6 +117,8 @@ int main()
         //oppure Cell0DId+1 (forse meglio);
         PolygonalMesh.Num0DsCell = PolygonalMesh.coord0DsCellMap.size();
         PolygonalMesh.Num1DsCell = PolygonalMesh.coord1DsCellMap.size();
+        std::cout << i ;
+        std::cout << std::endl;
     }
 
     return 0;
