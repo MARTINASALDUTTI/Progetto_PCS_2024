@@ -35,10 +35,12 @@ struct PolygonalMesh{
 
 
     unsigned int Num2DsCell;
-    std::vector<std::vector<unsigned int>> Id2DsCell;
+    //std::vector<std::vector<unsigned int>> Id2DsCell;
     //perchè stiamo salvando std::array<unsigned int, 3>, cioè perchè 3????
     //std::vector<std::array<unsigned int, 3>> Cell2DssVertices = {}; ///< Cell2D Vertices indices, size 1 x NumberCell2DVertices[NumberCell2D]
     //std::vector<std::array<unsigned int, 3>> Cell2DsEdges = {}; ///< Cell2D Cell1D indices, size 1 x NumberCell2DEdges[NumberCell2D]
+    //secondo me meglio quest'altra alternativa: 1 non sai a priori quanti lati ha il poligono
+    //2 export polygon prende in input un std::vector<std::vector<unsigned int>>
     std::vector<std::vector<unsigned int>> Cell2DsVertices = {};
     std::vector<std::vector<unsigned int>> Cell2DsEdges = {};
 };

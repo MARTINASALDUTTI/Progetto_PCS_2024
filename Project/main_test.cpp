@@ -1,4 +1,6 @@
 #include "TestPolygons.hpp"
+#include "UCD_test.hpp"
+
 #include <gtest/gtest.h>
 
 int main(int argc, char *argv[])

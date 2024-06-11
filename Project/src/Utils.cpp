@@ -899,7 +899,7 @@ void CreateMesh(const Data::Fract& Fracture,
         {
             //se punta a PolygonalMesh.coord0DsCell.end() cevo aggiungere
             PolygonalMesh.coord0DsCell.push_back(Fracture.vertices.col(i));
-            IdVectices.push_back(PolygonalMesh.coord0DsCell.size());
+            IdVectices.push_back(PolygonalMesh.coord0DsCell.size()-1);
         }
         else
         {
@@ -950,8 +950,16 @@ void CreateMesh(const Data::Fract& Fracture,
         }
         else
         {
-            unsigned int position = std::distance(PolygonalMesh.coord1DsCell_Id0DS.begin(), variabile1);
-            IdEdge.push_back(position);
+            if (variabile1 == PolygonalMesh.coord1DsCell_Id0DS.end())
+            {
+            unsigned int position = std::distance(PolygonalMesh.coord1DsCell_Id0DS.begin(), variabile2);
+            IdEdge.push_back(position-1);
+            }
+            else
+            {
+                unsigned int position = std::distance(PolygonalMesh.coord1DsCell_Id0DS.begin(), variabile1);
+                IdEdge.push_back(position-1);
+            }
         }
     }
 

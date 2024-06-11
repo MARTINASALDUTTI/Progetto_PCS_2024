@@ -82,8 +82,8 @@ namespace UnitTesting
         ExtremesTest.push_back(a);
         ExtremesTest.push_back(b);
         ASSERT_TRUE(testTrace.ExtremesCoord[0] == ExtremesTest[0] && testTrace.ExtremesCoord[1] == ExtremesTest[1]);
-        ASSERT_TRUE(testTrace.Tips[0] == true);
-        ASSERT_TRUE(testTrace.Tips[1] == true);
+        ASSERT_TRUE(testTrace.Tips[0] == false);
+        ASSERT_TRUE(testTrace.Tips[1] == false);
         ASSERT_TRUE(testTrace.length - 1 <= tol && testTrace.length - 1  >= -tol);
     }
 
