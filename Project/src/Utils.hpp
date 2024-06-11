@@ -103,4 +103,9 @@ bool SolveSystem(const Eigen::Vector3d& Direction,
 //void perchè la mesh è da aggiornare
 void CreateMesh(const Data::Fract& Fracture,
                 PolygonalMeshLibrary::PolygonalMesh& PolygonalMesh);
+
+/*
+Eigen::MatrixXd SavingPoint(const std::vector<Eigen::Vector3d>& PointsList,
+                            const Eigen::Vector3d& Normal);
+*/
 }

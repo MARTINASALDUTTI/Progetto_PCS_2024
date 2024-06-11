@@ -590,6 +590,20 @@ bool SolveSystem(const Eigen::Vector3d& Direction,
     return Flag;
 }
 
+/*
+Eigen::MatrixXd SavingPoint(const std::vector<Eigen::Vector3d>& PointsList,
+                            const Eigen::Vector3d& Normal, Eigen::MatrixXd &MatrixPoint)
+{
+    Eigen::MatrixXd MatrixPoint(3, PointsList.size());
+
+    for(unsigned int k = 0; k < PointsList.size(); k++)
+    {
+        //....
+    }
+    return MatrixPoint;
+}
+*/
+
 bool MakeCuts(std::list<unsigned int>& AllTraces,
               const std::vector<Data::Trace>& traces,
               PolygonalMeshLibrary::PolygonalMesh& PolygonalMesh,
@@ -821,6 +835,7 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
         //bisogna capire perchè escono poligoni da 2
         if(FirstSide.size() > 2)
         {
+            //Eigen::MatrixXd FirstSubPolygon = SavingPoint(FirstSide, Fracture.normals);
             //copio std::vector in Eigen::Matrix
             Eigen::MatrixXd FirstSubPolygon(3,FirstSide.size());
 
@@ -856,7 +871,6 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
             //aggiungo alla fine della lista i sottopoligoni da analizzare
 
             AllSubPolygons.push(subpolygondue);
-
         }
 
         /*
