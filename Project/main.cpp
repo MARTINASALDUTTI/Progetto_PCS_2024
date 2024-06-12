@@ -131,19 +131,19 @@ int main()
         PolygonalMesh.Num2DsCell = PolygonalMesh.Cell2DsVertices.size();
 
         Meshes.push_back(PolygonalMesh);
-        /*
-        unsigned int j = 0;
+
         for (auto& elem : PolygonalMesh.coord0DsCell )
             std::cout << elem.transpose() << ", " << std::endl;
         std::cout << std::endl;
-        */
 
-        /*
+
+
         unsigned int j = 0;
         for (auto& elem : PolygonalMesh.coord1DsCell_Id0DS )
             std::cout << j++ << " " << elem[0] << " " << elem[1] << std::endl;
         std::cout << std::endl;
-        */
+
+        /*
         unsigned int j = 0;
         for (auto& polygon : PolygonalMesh.Cell2DsVertices )
         {
@@ -153,6 +153,7 @@ int main()
             std::cout << std::endl;
         }
         std::cout << std::endl;
+        */
     }
 
     /*

@@ -561,56 +561,37 @@ bool SolveSystem(const Eigen::Vector3d& Direction,
     return Flag;
 }
 
-/*
-Eigen::MatrixXd SavingPoint(const std::vector<Eigen::Vector3d>& PointsList,
-                            const Eigen::Vector3d& Normal, Eigen::MatrixXd &MatrixPoint)
-{
-    Eigen::MatrixXd MatrixPoint(3, PointsList.size());
-
-    for(unsigned int k = 0; k < PointsList.size(); k++)
-    {
-        //....
-    }
-    return MatrixPoint;
-}
-*/
-
 bool MakeCuts(std::list<unsigned int>& AllTraces,
               const std::vector<Data::Trace>& traces,
               PolygonalMeshLibrary::PolygonalMesh& PolygonalMesh,
               std::queue<Data::Fract>& AllSubPolygons)
 {
-    Eigen::Vector3d Candidate1;
-    Eigen::Vector3d Candidate2;
-    Data::Fract Fracture;
+    Data::Fract CurrentPolygon;
 
     if (AllTraces.size() == 0)
     {
-        //std::cout << "bisogna salvare il sottopoligono " << std::endl;
-         // non so se bisogna aggiungere ciclare per tutti (forse sì)
-        //fine della ricorsione
+        std::cout << "bisogna salvare il sottopoligono " << std::endl;
+
         while(!AllSubPolygons.empty())
         {
             PolygonalMeshLibrary::CreateMesh(AllSubPolygons.front(), PolygonalMesh);
             AllSubPolygons.pop();
         }
-        //Fracture = AllSubPolygons.front();
-        //PolygonalMeshLibrary::CreateMesh(Fracture,PolygonalMesh);
-
-        return false;
+        return true;
     }
     else
     {
-        if (AllSubPolygons.size() == 0)
+        if(AllSubPolygons.size() == 0 )
         {
-            std::cout << " AllTraces.size() " << AllTraces.size() << std::endl;
+            std::cerr << "ERROR: AllSubPolygons.size() == 0 " << std::endl;
             return false;
         }
         else
-            Fracture = AllSubPolygons.front();
+        {
+            CurrentPolygon = AllSubPolygons.front();
+        }
 
-        //seleziono la traccia più lunga
-        //forse meglio lista
+        //devo selezionare la traccia più lunga fra quelle del sottopoligono
         Data::Trace CurrentTrace;
         //se metto reference vicino ad auto mi fa errore
         bool FineRicorsione = true;
@@ -620,7 +601,7 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
             //std::cout << "TraceId " << CurrentTrace.TraceId << std::endl;
             // vedere come gestire casi in cui la traccia viene divisa fra due sotto poligoni e chiedere se bisogna farlo
 
-            if (FractureOperations::isPointInPolygon(CurrentTrace.ExtremesCoord[0], Fracture.vertices))
+            if (FractureOperations::isPointInPolygon(CurrentTrace.ExtremesCoord[0], CurrentPolygon.vertices))
             {
                 /*quando la traccia è interna al sottopoligono
                  * FineRicorsione diventa false ed esco dal ciclo
@@ -635,12 +616,11 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
             //capire cosa fare se esce un segmento e perche
         }
 
-        //std::cout << "FineRicorsione " << FineRicorsione << std::endl;
         if(FineRicorsione == true)
         {
             // bisogna salvare il sotto poligono e uscire dalla funzione
             std::cout << " bisogna salvare il sotto poligono e passare al prossimo sootopoligono" << std::endl;
-            PolygonalMeshLibrary::CreateMesh(Fracture,PolygonalMesh);
+            PolygonalMeshLibrary::CreateMesh(CurrentPolygon,PolygonalMesh);
             // Rimuovi il primo sottopoligono analizzato dalla lista
             AllSubPolygons.pop();
 
@@ -649,7 +629,7 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
                                            traces,
                                            PolygonalMesh,
                                            AllSubPolygons);
-            return false;
+            return true;
         }
         //estraggo gli estremi e individuo la direzione sulla quale giace la traccia
         Eigen::Vector3d FirstExtreme = CurrentTrace.ExtremesCoord[0];
@@ -657,201 +637,190 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
         Eigen::Vector3d Direction = SecondExtreme - FirstExtreme;
         //per ogni vertice del poligono controllo la sua posizione reciproca rispetto alla traccia
         //inizio a creare un std::vector ma fose meglio array(bisogna controllare costi computazionali) sappiamo dimensioni a priori??
-        std::vector<Eigen::Vector3d> FirstSide;
-        std::vector<Eigen::Vector3d> SecondSide;
-        //se la traccia è passante già ho gli estremi che appartegono ad entrambi i poligoni
-        bool Passing = false;
-        //tramite tip
-        auto variabile = std::find(Fracture.passingTracesId.begin(), Fracture.passingTracesId.end(), CurrentTrace.TraceId);
-        if(variabile != Fracture.passingTracesId.end())
+
+        std::vector<Eigen::Vector3d> estremiTracce;
+        estremiTracce.reserve(2);
+
+        bool PreviousCheck = false;
+        Eigen::Vector3d congiungente = CurrentPolygon.vertices.col(CurrentPolygon.vertices.cols()-1) - FirstExtreme;
+        Eigen::Vector3d v= Direction.cross(congiungente);
+        if (v.dot(CurrentPolygon.normals)>-tol)
+            PreviousCheck = true;
+        for (unsigned int i = 0; i < CurrentPolygon.vertices.cols(); i++)
         {
-            //creo un bool per indicare che la traccia è passante
-            Passing = true;
-        }
+            /*per ogni lato ho tre opzioni
+             * 1 il primo estremo è sul lato
+             * 2 il secondo estremo è sul lato
+             * 3 nessuno dei due estremi è sul lato, controllo se devo prolungare
+             */
+            bool CurrentCheck = false;
 
-        //std::cout << "Passing " << Passing << std::endl;
-        //se non è passante devo prolungare
-        if(Passing == false)
-        {
-
-            std::vector<Eigen::Vector3d> estremiTracce;
-
-            bool PreviousCheck = false;
-            Eigen::Vector3d congiungente = Fracture.vertices.col(Fracture.vertices.cols()-1) - FirstExtreme;
-            Eigen::Vector3d v= Direction.cross(congiungente);
-            if (v.dot(Fracture.normals)>-tol)
-                PreviousCheck = true;
-            for (unsigned int i = 0; i < Fracture.vertices.cols(); i++)
+            if(FractureOperations::isPointOnEdge(FirstExtreme, CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i - 1) % CurrentPolygon.vertices.cols())))
             {
-                /*per ogni lato ho tre opzioni
-                 * 1 il primo estremo è sul lato
-                 * 2 il secondo estremo è sul lato
-                 * 3 nessuno dei due estremi è sul lato, controllo se devo prolungare
-                 */
-                bool CurrentCheck = false;
-
-                if(FractureOperations::isPointOnEdge(FirstExtreme, Fracture.vertices.col(i), Fracture.vertices.col((i - 1) % Fracture.vertices.cols())))
-                {
-                    estremiTracce.push_back(FirstExtreme);
-                    Eigen::Vector3d congiungente = Fracture.vertices.col(i) - FirstExtreme;
-                    Eigen::Vector3d v= Direction.cross(congiungente);
-                    if (v.dot(Fracture.normals)>-tol) //controlla > tol oppure >= -tol
-                        CurrentCheck = true;
-                }
-                else if(FractureOperations::isPointOnEdge(SecondExtreme, Fracture.vertices.col(i), Fracture.vertices.col((i - 1) % Fracture.vertices.cols())))
-                {
-                    estremiTracce.push_back(SecondExtreme);
-                    Eigen::Vector3d congiungente = Fracture.vertices.col(i) - FirstExtreme;
-                    Eigen::Vector3d v= Direction.cross(congiungente);
-                    if (v.dot(Fracture.normals)>-tol) //controlla > tol oppure >= -tol
-                        CurrentCheck = true;
-                }
-                else
-                {
-                    Eigen::Vector3d congiungente = Fracture.vertices.col(i) - FirstExtreme;
-                    Eigen::Vector3d v= Direction.cross(congiungente);
-                    if (v.dot(Fracture.normals)>-tol) //controlla > tol oppure >= -tol
-                        CurrentCheck = true;
-                    if(PreviousCheck != CurrentCheck)
-                    {
-                        //solve sistem
-                        Eigen::Vector3d Solution;
-                        if(PolygonalMeshLibrary::SolveSystem(Direction,
-                                                             Fracture.vertices.col(i),
-                                                             Fracture.vertices.col((i - 1) % Fracture.vertices.cols()),
-                                                             FirstExtreme,
-                                                             Solution))
-                        {
-                            estremiTracce.push_back(Solution);
-                        }
-                    }
-                    else if(((Direction.dot(Fracture.vertices.col(i) - FirstExtreme) >= -tol) || (Direction.dot(Fracture.vertices.col(i) - FirstExtreme) <= tol)) &&
-                            ((Direction.dot(Fracture.vertices.col((i - 1) % Fracture.vertices.cols()) - FirstExtreme) >= -tol) ||
-                             (Direction.dot(Fracture.vertices.col((i - 1) % Fracture.vertices.cols()) - FirstExtreme) <= tol)))
-                    {
-                        //solve sistem
-                        Eigen::Vector3d Solution;
-                        if(PolygonalMeshLibrary::SolveSystem(Direction,
-                                                             Fracture.vertices.col(i),
-                                                             Fracture.vertices.col((i - 1) % Fracture.vertices.cols()),
-                                                             FirstExtreme,
-                                                             Solution))
-                        {
-                            estremiTracce.push_back(Solution);
-                        }
-                    }
-                }
-                PreviousCheck = CurrentCheck;
+                estremiTracce.push_back(FirstExtreme);
+                Eigen::Vector3d congiungente = CurrentPolygon.vertices.col(i) - FirstExtreme;
+                Eigen::Vector3d v= Direction.cross(congiungente);
+                if (v.dot(CurrentPolygon.normals)>-tol) //controlla > tol oppure >= -tol
+                    CurrentCheck = true;
             }
-            //aggiorno FirstExtreme e SecondExtreme con i prolungamenti
-            //estremi tracce ha necessariamente due elementi
-            FirstExtreme = estremiTracce[0];
-            SecondExtreme = estremiTracce[1];
-        }
-         //ho prolungato quindi nel caso di tracce passanti ho gli estremi aaltrimenti i prolungamenti
-        FirstSide.push_back(FirstExtreme);
-        SecondSide.push_back(FirstExtreme);
-
-        bool AnotherCheck = false;
-        for (unsigned int i = 0; i < Fracture.vertices.cols(); i++)
-        {
-            Eigen::Vector3d congiungente = Fracture.vertices.col(i) - FirstExtreme;
-            Eigen::Vector3d v= Direction.cross(congiungente);
-            if (v.dot(Fracture.normals)>tol)
+            else if(FractureOperations::isPointOnEdge(SecondExtreme, CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i - 1) % CurrentPolygon.vertices.cols())))
             {
-                //se la normale è parallela sta da un lato
-                FirstSide.push_back(Fracture.vertices.col(i));
-            }
-            else if (v.dot(Fracture.normals)<-tol)
-            {
-                SecondSide.push_back(Fracture.vertices.col(i));
-            }
-            else if (v.dot(Fracture.normals)>-tol && v.dot(Fracture.normals)<tol)
-            {
-                //caso limite: il prodotto scalare fa 0
-                std::cout << "caso limite" << std::endl;
-                AnotherCheck = true;
-                break;
-            }
-        }
-
-        //l'altro controllo: gestione caso limite ( valido solo per quadrati)
-        if(AnotherCheck == true)
-        {
-            Eigen::Vector3d edge = Fracture.vertices.col(0) - Fracture.vertices.col(1);
-            if(Direction.cross(edge).norm()> -tol && Direction.cross(edge).norm() < tol)
-            {
-                //std::cout << "caso pippo 1" << std::endl;
-
-                FirstSide.push_back(Fracture.vertices.col(0));
-                FirstSide.push_back(Fracture.vertices.col(1));
-                SecondSide.push_back(Fracture.vertices.col(2));
-                SecondSide.push_back(Fracture.vertices.col(3));
+                estremiTracce.push_back(SecondExtreme);
+                Eigen::Vector3d congiungente = CurrentPolygon.vertices.col(i) - FirstExtreme;
+                Eigen::Vector3d v= Direction.cross(congiungente);
+                if (v.dot(CurrentPolygon.normals)>-tol) //controlla > tol oppure >= -tol
+                    CurrentCheck = true;
             }
             else
             {
-                //std::cout << "caso pippo 2" << std::endl;
+                Eigen::Vector3d congiungente = CurrentPolygon.vertices.col(i) - FirstExtreme;
+                Eigen::Vector3d v= Direction.cross(congiungente);
+                if (v.dot(CurrentPolygon.normals)>-tol) //controlla > tol oppure >= -tol
+                    CurrentCheck = true;
+                if(PreviousCheck != CurrentCheck)
+                {
+                    //solve sistem
+                    Eigen::Vector3d Solution;
+                    if(PolygonalMeshLibrary::SolveSystem(Direction,
+                                                          CurrentPolygon.vertices.col(i),
+                                                          CurrentPolygon.vertices.col((i - 1) % CurrentPolygon.vertices.cols()),
+                                                          FirstExtreme,
+                                                          Solution))
+                    {
+                        estremiTracce.push_back(Solution);
+                    }
+                }
+                else if(((Direction.dot(CurrentPolygon.vertices.col(i) - FirstExtreme) >= -tol) || (Direction.dot(CurrentPolygon.vertices.col(i) - FirstExtreme) <= tol)) &&
+                         ((Direction.dot(CurrentPolygon.vertices.col((i - 1) % CurrentPolygon.vertices.cols()) - FirstExtreme) >= -tol) ||
+                          (Direction.dot(CurrentPolygon.vertices.col((i - 1) % CurrentPolygon.vertices.cols()) - FirstExtreme) <= tol)))
+                {
+                    //solve sistem
+                    Eigen::Vector3d Solution;
+                    if(PolygonalMeshLibrary::SolveSystem(Direction,
+                                                          CurrentPolygon.vertices.col(i),
+                                                          CurrentPolygon.vertices.col((i - 1) % CurrentPolygon.vertices.cols()),
+                                                          FirstExtreme,
+                                                          Solution))
+                    {
+                        estremiTracce.push_back(Solution);
+                    }
+                }
+            }
+            PreviousCheck = CurrentCheck;
+        }
 
-                FirstSide.push_back(Fracture.vertices.col(1));
-                FirstSide.push_back(Fracture.vertices.col(2));
-                SecondSide.push_back(Fracture.vertices.col(3));
-                SecondSide.push_back(Fracture.vertices.col(0));
+
+        std::vector<Eigen::Vector3d> estremiTracceCopia = estremiTracce;
+
+        //faccio un ciclo per ogni sottopoligono
+
+        FirstExtreme = estremiTracce.front();
+        Direction = estremiTracce.back() - FirstExtreme;
+        std::vector<Eigen::Vector3d> FirstSide; //la queue secondo me è più intelligente ma crasha, non so perchè
+        for (unsigned int i = 0; i < CurrentPolygon.vertices.cols(); i++)
+        {
+            Eigen::Vector3d congiungente = CurrentPolygon.vertices.col(i) - FirstExtreme;
+            Eigen::Vector3d v= Direction.cross(congiungente);
+            if (v.dot(CurrentPolygon.normals)>tol)
+            {
+                //se la normale è parallela sta da un lato
+                FirstSide.push_back(CurrentPolygon.vertices.col(i));
+            }
+            else if (v.dot(CurrentPolygon.normals)<-tol)
+            {
+                if (!estremiTracce.empty())
+                {
+                    FirstSide.push_back(estremiTracce.front());
+                    estremiTracce.erase(estremiTracce.begin());
+                }
+            }
+            else if (v.dot(CurrentPolygon.normals)>-tol && v.dot(CurrentPolygon.normals)<tol)
+            {
+                //caso limite: il prodotto scalare fa 0
+                std::cout << "caso limite" << std::endl;
+                //AnotherCheck = true;
+                //break;
             }
         }
 
-        //per rispettare il verso antiorario
-        FirstSide.push_back(SecondExtreme);
-        SecondSide.push_back(SecondExtreme);
-
-        //bisogna capire perchè escono poligoni da 2
         if(FirstSide.size() > 2)
         {
-            //Eigen::MatrixXd FirstSubPolygon = SavingPoint(FirstSide, Fracture.normals);
             //copio std::vector in Eigen::Matrix
-            Eigen::MatrixXd FirstSubPolygon(3,FirstSide.size());
+            Eigen::MatrixXd SubPolygon(3,FirstSide.size());
 
             for(unsigned int k = 0; k < FirstSide.size(); k++)
             {
-                FirstSubPolygon.col(k) = FirstSide[k];
+                SubPolygon.col(k) = FirstSide[k];
             }
-            //std::cout << FirstSubPolygon << std::endl;
-            Data::Fract subpolygonuno;
-            subpolygonuno.vertices = FirstSubPolygon;
-            subpolygonuno.passingTracesId = Fracture.passingTracesId;
-            subpolygonuno.notPassingTracesId= Fracture.notPassingTracesId;
-            subpolygonuno.normals = Fracture.normals;
+            Data::Fract subpolygon;
+            subpolygon.vertices = SubPolygon;
+            subpolygon.passingTracesId = CurrentPolygon.passingTracesId;
+            //subpolygon.notPassingTracesId= Fracture.notPassingTracesId;
+            subpolygon.normals = CurrentPolygon.normals;
             //aggiungo alla fine della lista i sottopoligoni da analizzare
+            //std::cout << SubPolygon << std::endl;
+            //std::cout << std::endl;
+            AllSubPolygons.push(subpolygon);
+        }
 
-            AllSubPolygons.push(subpolygonuno);
+        std::vector<Eigen::Vector3d> SecondSide;
+
+        FirstExtreme = estremiTracceCopia.front();
+        Direction = estremiTracceCopia.back() - FirstExtreme;
+
+        //if (AnotherCheck == false)
+        //{
+            for (unsigned int i = 0; i < CurrentPolygon.vertices.cols(); i++)
+            {
+                Eigen::Vector3d congiungente = CurrentPolygon.vertices.col(i) - FirstExtreme;
+                Eigen::Vector3d v= Direction.cross(congiungente);
+
+                if (v.dot(CurrentPolygon.normals)<-tol)
+                {
+                    //se la normale è parallela sta da un lato
+                    SecondSide.push_back(CurrentPolygon.vertices.col(i));
+                }
+                else if (v.dot(CurrentPolygon.normals)>tol)
+                {
+                    if (!estremiTracceCopia.empty())
+                    {
+                        SecondSide.push_back(estremiTracceCopia.front());
+                        estremiTracceCopia.erase(estremiTracceCopia.begin());
+                    }
+                }
+                else if (v.dot(CurrentPolygon.normals)>-tol && v.dot(CurrentPolygon.normals)<tol)
+                {
+                    //caso limite: il prodotto scalare fa 0
+                    std::cout << "caso limite" << std::endl;
+                    //AnotherCheck = true;
+                    //break;
+                }
+            //}
         }
 
         if(SecondSide.size() > 2)
         {
-            Eigen::MatrixXd SecondSubPolygon(3,SecondSide.size());
+            //Eigen::MatrixXd FirstSubPolygon = SavingPoint(FirstSide, Fracture.normals);
+            //copio std::vector in Eigen::Matrix
+            Eigen::MatrixXd SubPolygon(3,SecondSide.size());
 
             for(unsigned int k = 0; k < SecondSide.size(); k++)
             {
-                SecondSubPolygon.col(k) = SecondSide[k];
+                SubPolygon.col(k) = SecondSide[k];
             }
-            //std::cout << SecondSubPolygon << std::endl;
-            Data::Fract subpolygondue;
-            subpolygondue.vertices = SecondSubPolygon;
-            subpolygondue.passingTracesId = Fracture.passingTracesId;
-            subpolygondue.notPassingTracesId= Fracture.notPassingTracesId;
-            subpolygondue.normals = Fracture.normals;
+            //std::cout << FirstSubPolygon << std::endl;
+            Data::Fract subpolygon;
+            subpolygon.vertices = SubPolygon;
+            subpolygon.passingTracesId = CurrentPolygon.passingTracesId;
+            //subpolygon.notPassingTracesId= Fracture.notPassingTracesId;
+            subpolygon.normals = CurrentPolygon.normals;
             //aggiungo alla fine della lista i sottopoligoni da analizzare
+            //std::cout << SubPolygon << std::endl;
+            //std::cout << std::endl;
 
-            AllSubPolygons.push(subpolygondue);
+            AllSubPolygons.push(subpolygon);
         }
 
-        /*
-        std::cout << " AllSubPolygons " << std::endl;
-        for (auto it = AllSubPolygons.begin(); it != AllSubPolygons.end(); ++it)
-        {
-            Fracture = *it;
-            PolygonalMeshLibrary::CreateMesh(Fracture, PolygonalMesh);
-        }
-        */
         //elimino la traccia considerata
         AllTraces.remove(CurrentTrace.TraceId); //remove elimina tutte le occorrenze... NO PROBLEM: nell nostra lista non ci sono elementi ripetuti
 
@@ -866,6 +835,7 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
                                        PolygonalMesh,
                                        AllSubPolygons);
     }
+
     return true;
 }
 
@@ -903,21 +873,7 @@ void CreateMesh(const Data::Fract& Fracture,
      * poi cicliamo for(unsigned int i = 0; i < Fracture.vertices.cols(); i++) e con i accediamo all'indice
      */
      // secondo me, l'ideale sarebbe usare un std::map a cui accedere con chiave l'id perchè è più basse il costo del find ma non ho capito come si fa a cercare per valore
-    /* con queto ciclo salvo le coordinate degli estremi ma in teoria non serve
-    for(unsigned int i = 0; i < Fracture.vertices.cols(); i++)
-    {
-        std::array<Eigen::Vector3d, 2> edge1 = {Fracture.vertices.col(i), Fracture.vertices.col((i - 1) % Fracture.vertices.cols())};
-        std::array<Eigen::Vector3d, 2> edge2 = {Fracture.vertices.col((i - 1) % Fracture.vertices.cols()), Fracture.vertices.col(i)};
-        auto variabile1 = std::find(PolygonalMesh.coord1DsCell.begin(), PolygonalMesh.coord1DsCell.end(), edge1);
-        auto variabile2 = std::find(PolygonalMesh.coord1DsCell.begin(), PolygonalMesh.coord1DsCell.end(), edge2);
 
-        if(variabile1 == PolygonalMesh.coord1DsCell.end() && variabile2 == PolygonalMesh.coord1DsCell.end() )
-        {
-            //se punta a PolygonalMesh.coord0DsCell.end() cevo aggiungere
-            PolygonalMesh.coord1DsCell.push_back(edge1);
-        }
-    }
-    */
 
     std::vector<unsigned int> IdEdge;
 
@@ -950,49 +906,6 @@ void CreateMesh(const Data::Fract& Fracture,
 
     PolygonalMesh.Cell2DsVertices.push_back(IdVectices);
     PolygonalMesh.Cell2DsEdges.push_back(IdEdge);
-
-    /*
-    for(unsigned int i = 0; i < Fracture.vertices.cols(); i++)
-    {
-
-        auto variabile1 = std::find(PolygonalMesh.coord1DsCell.begin(), PolygonalMesh.coord0DsCell.end(), Fracture.vertices.col(i));
-        auto variabile2 = std::find(PolygonalMesh.coord1DsCell.begin(), PolygonalMesh.coord0DsCell.end(), Fracture.vertices.col(i));
-
-        if(variabile == PolygonalMesh.coord0DsCell.end())
-        {
-            //se punta a PolygonalMesh.coord0DsCell.end() cevo aggiungere
-            coord0DsCell.push_back(Fracture.vertices.col(i));
-        }
-    }
-
-    std::unordered_map<Eigen::Vector3d*, unsigned int> coord0DsCellMap; //ha senso??
-    //metodo esercitazione 5
-    for(unsigned int i = 0; i < Fracture.vertices.cols(); i++)
-    {
-        const Eigen::Vector3d* vertice = &Fracture.vertices.col(i);
-
-        //se la chiuave già esiste ret.second = false
-        auto ret = PolygonalMesh.coord0DsCellMap.insert({vertice, {Cell0DId}});
-        if(ret.second)
-            Cell0DId++;
-    }
-    PolygonalMesh.coord0DsCellMap = coord0DsCellMap;
-    */
-    //una volta salvati i vertici, passo ai lati
-    /*
-    std::unordered_map<unsigned int, std::array<unsigned int, 2>> coord1DsCellMap;
-    for(unsigned int i = 0; i < Fracture.vertices.cols(); i++)
-    {
-        unsigned int FirstId = coord0DsCellMap.find(Fracture.vertices.col(i)) ;
-        unsigned int SecondId = coord0DsCellMap.find(Fracture.vertices.col(i) % Fracture.vertices.cols()) ;
-        std::array<unsigned int, 2> value = {FirstId, SecondId};
-        if (!containsValue(coord1DsCellMap, value))
-        {
-            coord1DsCellMap[(Cell1DId)++] = value; // Usa l'indice i come chiave
-        }
-    }
-    PolygonalMesh.coord1DsCellMap = coord1DsCellMap;
-    */
 }
 }
 

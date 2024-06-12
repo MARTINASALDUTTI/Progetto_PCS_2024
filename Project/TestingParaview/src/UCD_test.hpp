@@ -38,9 +38,9 @@ TEST(TestUCDUtilities, UCDUtilities_Test1Ds)
     points.col(1) << 1, 0, 0;
     points.col(2) << 1, 1, 0;
     points.col(3) << 0.8, 1, 0;
-    points.col(4) << 0.8, 0.5, 0;
-    points.col(5) << 0, 1, 0;
-    points.col(6) << 0, 0.5, 0;
+    points.col(4) << 0, 0.5, 0;
+    points.col(5) << 0.8, 0.5, 0;
+    points.col(6) << 0, 1, 0;
     points.col(7) << 0, 0, 0;
 
     Eigen::MatrixXi edges(2, 11);
@@ -52,9 +52,9 @@ TEST(TestUCDUtilities, UCDUtilities_Test1Ds)
     edges.col(5) << 5, 4;
     edges.col(6) << 3, 5;
     edges.col(7) << 6, 3;
-    edges.col(8) << 0, 4;
-    edges.col(9) << 7, 0;
-    edges.col(10) << 6, 7;
+    edges.col(8) << 7, 5;
+    edges.col(9) << 0, 7;
+    edges.col(10) << 4, 0;
 
     exporter.ExportSegments(exportFolder + "Cell1Ds.inp",
                             points,
