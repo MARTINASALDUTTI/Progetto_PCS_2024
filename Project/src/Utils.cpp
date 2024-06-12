@@ -283,37 +283,8 @@ bool findExtreme(const Eigen::Vector3d& V1,
         return false;
 }
 
-
 bool isPointInPolygon(const Eigen::Vector3d& point,
                       const Eigen::MatrixXd& Fracture)
-{
-    //double tol = 1e-10;
- //   if (Fracture.cols() <3)
- //   {
-  //      std::cerr << "non si tratta di un poligono" << std::endl;
-  //  }
-    //VEDI TRE: POSSIBILE ERRORE
-    if(Fracture.cols() > 3 )
-    {
-        Eigen::Vector3d AB = Fracture.col(1) - Fracture.col(0);
-        Eigen::Vector3d AD = Fracture.col(3) - Fracture.col(0); //ricorda che hai cambiato il tre in due
-        Eigen::Vector3d AP = point - Fracture.col(0);
-
-        double dotAB_AB = AB.dot(AB);
-        double dotAD_AD = AD.dot(AD);
-        double dotAP_AB = AP.dot(AB);
-        double dotAP_AD = AP.dot(AD);
-
-        double lambda1 = dotAP_AB / dotAB_AB;
-        double lambda2 = dotAP_AD / dotAD_AD;
-
-        return (lambda1 >= -tol && lambda1 <= 1.0+tol && lambda2 >= -tol && lambda2 <= 1+tol);
-    }
-    return false;
-}
-
-bool isPointInPolygonCorrectversion (const Eigen::Vector3d& point,
-                                    const Eigen::MatrixXd& Fracture)
 {
     double tol = 1e-10;
     int numVertices = Fracture.cols();
@@ -649,7 +620,7 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
             //std::cout << "TraceId " << CurrentTrace.TraceId << std::endl;
             // vedere come gestire casi in cui la traccia viene divisa fra due sotto poligoni e chiedere se bisogna farlo
 
-            if (FractureOperations::isPointInPolygonCorrectversion(CurrentTrace.ExtremesCoord[0], Fracture.vertices))
+            if (FractureOperations::isPointInPolygon(CurrentTrace.ExtremesCoord[0], Fracture.vertices))
             {
                 /*quando la traccia è interna al sottopoligono
                  * FineRicorsione diventa false ed esco dal ciclo

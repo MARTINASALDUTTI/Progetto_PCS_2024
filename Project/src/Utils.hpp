@@ -53,9 +53,6 @@ bool findExtreme(const Eigen::Vector3d& V1,
 bool isPointInPolygon(const Eigen::Vector3d& point,
                       const Eigen::MatrixXd& Fracture);
 
-bool isPointInPolygonCorrectversion(const Eigen::Vector3d& point,
-                                    const Eigen::MatrixXd& Fracture);
-
 bool isPointOnEdge(const Eigen::Vector3d& extremePoint,
                    const Eigen::Vector3d& V1,
                    const Eigen::Vector3d& V2);
