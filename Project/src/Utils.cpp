@@ -607,7 +607,6 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
               PolygonalMeshLibrary::PolygonalMesh& PolygonMesh,
               std::queue<Data::Fract>& AllSubPolygons)
 {
-    //bisogna modificare una copia di traces
     Data::Fract CurrentPolygon;
 
     if (AllTraces.size() == 0)
@@ -667,7 +666,6 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
             PolygonalMeshLibrary::CreateMesh(CurrentPolygon,
                                              PolygonMesh);
             // Rimuovi il primo sottopoligono analizzato dalla lista
-
             AllSubPolygons.pop();
 
             //richiamo makecut per ogni sotto pologono
@@ -676,7 +674,7 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
                                            PolygonMesh,
                                            AllSubPolygons);
         }
-        //ho aggiunto else
+
         //estraggo gli estremi e individuo la direzione sulla quale giace la traccia
         Eigen::Vector3d FirstExtreme = CurrentTrace.ExtremesCoord[0];
         Eigen::Vector3d SecondExtreme = CurrentTrace.ExtremesCoord[1];
@@ -687,8 +685,6 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
         std::vector<Eigen::Vector3d> estremiTracce;
         estremiTracce.reserve(2);
 
-        if (CurrentPolygon.vertices.cols() > 3)
-        {
         bool PreviousCheck = false;
         Eigen::Vector3d congiungente = CurrentPolygon.vertices.col(CurrentPolygon.vertices.cols()-1) - FirstExtreme;
         Eigen::Vector3d v= Direction.cross(congiungente);
@@ -742,22 +738,6 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
             }
             PreviousCheck = CurrentCheck;
         }
-        }
-        else
-        {
-            for (unsigned int i = 0; i < CurrentPolygon.vertices.cols(); i++)
-            {
-                Eigen::Vector3d Solution;
-                if(PolygonalMeshLibrary::SolveSystem(Direction,
-                                                      CurrentPolygon.vertices.col(i),
-                                                      CurrentPolygon.vertices.col((i - 1) % CurrentPolygon.vertices.cols()),
-                                                      FirstExtreme,
-                                                      Solution))
-                {
-                    estremiTracce.push_back(Solution);
-                }
-            }
-        }
 
         for (auto& elem : estremiTracce)
             std::cout <<elem.transpose() << std::endl;
@@ -771,17 +751,16 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
                                            traces,
                                            PolygonalMesh,
                                            AllSubPolygons);
-            */
+    */
         }
-
         FirstExtreme = estremiTracce.front();
         Direction = estremiTracce.back() - FirstExtreme;
         std::vector<Eigen::Vector3d> FirstSide;
 
         unsigned int i = 0;
-        Eigen::Vector3d congiungente = CurrentPolygon.vertices.col(i) - FirstExtreme;
+        congiungente = CurrentPolygon.vertices.col(i) - FirstExtreme;
 
-        Eigen::Vector3d v= Direction.cross(congiungente);
+        v= Direction.cross(congiungente);
 
         while (v.dot(CurrentPolygon.normals)> tol )
         {
@@ -885,7 +864,7 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
             }
             */
         }
-        else if (FirstSide.size() > 2 && SecondSide.size() >2)
+        else
         {
             //sicuramnete è sbagliato
             AllTraces.remove(CurrentTrace.TraceId);
@@ -896,6 +875,7 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
         }
 
         //std::cout << SecondSide.size() << std::endl;
+
         //elimino la traccia considerata:
         if (FractureOperations::isPointInPolygonOK(CurrentTrace.ExtremesCoord[0], CurrentPolygon) &&
             FractureOperations::isPointInPolygonOK(CurrentTrace.ExtremesCoord[1], CurrentPolygon))
@@ -915,6 +895,7 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
             std::cout << estremiTracce.back().transpose() << std::endl;
             std::cout << estremiTracce.front().transpose() << std::endl;
             std::cout << std::endl;
+
 
             //vedi bene front e back, perchè secondo me è al contrario
             //aggiungi tol
@@ -944,9 +925,8 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
                 AllTraces.remove(CurrentTrace.TraceId);
 
             }
-            std::cout << "problem qua" << std::endl;
+            //std::cout << "problem qua" << std::endl;
         }
-
 
 
         // Rimuovi il primo sottopoligono analizzato dalla lista
