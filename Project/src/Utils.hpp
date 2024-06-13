@@ -95,7 +95,7 @@ namespace PolygonalMeshLibrary
 {
 bool MakeCuts(std::list<unsigned int>& AllTraces,
               std::vector<Data::Trace>& traces,
-              PolygonalMeshLibrary::PolygonalMesh& PolygonalMesh,
+              PolygonalMeshLibrary::PolygonalMesh& PolygonMesh,
               std::queue<Data::Fract>& AllSubPolygons);
 
 
@@ -107,5 +107,19 @@ bool SolveSystem(const Eigen::Vector3d& Direction,
 
 //void perchè la mesh è da aggiornare
 void CreateMesh(const Data::Fract& Fracture,
-                PolygonalMeshLibrary::PolygonalMesh& PolygonalMesh);
+                PolygonalMeshLibrary::PolygonalMesh& PolygonMesh);
+
+bool ConsideringTollerance(const Data::Fract& CurrentPolygon,
+                           Eigen::MatrixXd& subpol1,
+                           Eigen::MatrixXd& subpol2,
+                           std::queue<Data::Fract>& AllSubPolygons);
+
+/*
+bool ComputeNewTrace(const Data::Fract& CurrentPolygon,
+                     const Data::Trace& CurrentTrace,
+                     const std::vector<Eigen::Vector3d>& estremiTracce,
+                     std::list<unsigned int>& AllTraces,
+                     std::vector<Data::Trace>& traces);
+*/
 }
+
