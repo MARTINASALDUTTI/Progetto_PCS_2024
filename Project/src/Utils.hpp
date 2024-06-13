@@ -53,6 +53,9 @@ bool findExtreme(const Eigen::Vector3d& V1,
 bool isPointInPolygon(const Eigen::Vector3d& point,
                       const Eigen::MatrixXd& Fracture);
 
+bool isPointInPolygonOK(const Eigen::Vector3d& point,
+                      const Data::Fract& Fracture);
+
 bool isPointOnEdge(const Eigen::Vector3d& extremePoint,
                    const Eigen::Vector3d& V1,
                    const Eigen::Vector3d& V2);
@@ -64,6 +67,11 @@ bool isTracePassing(const Eigen::MatrixXd& fracture,
 bool bookCase(const Data::Fract& FirstFracture,
               const Data::Fract& SecondFracture,
               Data::Trace& foundTrace);
+
+/*
+bool isPointInTriangle(const Eigen::Vector3d& point,
+                       const Eigen::MatrixXd& Fracture);
+*/
 }
 
 namespace SortLibrary
@@ -86,7 +94,7 @@ void Mergesort(std::vector<unsigned int>& data,
 namespace PolygonalMeshLibrary
 {
 bool MakeCuts(std::list<unsigned int>& AllTraces,
-              const std::vector<Data::Trace>& traces,
+              std::vector<Data::Trace>& traces,
               PolygonalMeshLibrary::PolygonalMesh& PolygonalMesh,
               std::queue<Data::Fract>& AllSubPolygons);
 
@@ -100,5 +108,4 @@ bool SolveSystem(const Eigen::Vector3d& Direction,
 //void perchè la mesh è da aggiornare
 void CreateMesh(const Data::Fract& Fracture,
                 PolygonalMeshLibrary::PolygonalMesh& PolygonalMesh);
-
 }

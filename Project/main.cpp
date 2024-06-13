@@ -7,7 +7,7 @@
 int main()
 {
     constexpr double tol = 10e-10;
-    std::string inputFileName = "./DFN/FR3_data.txt";
+    std::string inputFileName = "./DFN/FR10_data.txt";
     std::string outputFileName = "./DFN/TRACE_data.txt";
     std::string outputFileName2 = "./DFN/Output2.txt";
 
@@ -104,6 +104,7 @@ int main()
     std::vector<PolygonalMeshLibrary::PolygonalMesh> Meshes;
     Meshes.reserve(Fractures.size());
 
+    /*
     for (unsigned int i = 0; i < Fractures.size(); i++)
     {
         //per ogni frattura, salvo in un unico vettore tracce passanti ordinate per lunghezza decrescente +
@@ -132,18 +133,19 @@ int main()
 
         Meshes.push_back(PolygonalMesh);
 
+
+        /*
         for (auto& elem : PolygonalMesh.coord0DsCell )
             std::cout << elem.transpose() << ", " << std::endl;
         std::cout << std::endl;
-
-
 
         unsigned int j = 0;
         for (auto& elem : PolygonalMesh.coord1DsCell_Id0DS )
             std::cout << j++ << " " << elem[0] << " " << elem[1] << std::endl;
         std::cout << std::endl;
 
-        /*
+
+
         unsigned int j = 0;
         for (auto& polygon : PolygonalMesh.Cell2DsVertices )
         {
@@ -154,20 +156,31 @@ int main()
         }
         std::cout << std::endl;
         */
-    }
-
-    /*
-    std::list<unsigned int>  AllTraces;
-    AllTraces.insert(AllTraces.end(), Fractures[2].passingTracesId.begin(), Fractures[2].passingTracesId.end()); // Inserisci tutti gli elementi di vec1
-    AllTraces.insert(AllTraces.end(), Fractures[2].notPassingTracesId.begin(), Fractures[2].notPassingTracesId.end());
+    //}
     PolygonalMeshLibrary::PolygonalMesh PolygonalMesh;
-    std::list<Data::Fract> AllSubPolygons;
-    AllSubPolygons.insert(AllSubPolygons.end(), Fractures[2]);
-    //definisco ricorsivamente la funzione che fa i tagli
+
+    std::list<unsigned int>  AllTraces;
+    AllTraces.insert(AllTraces.end(), Fractures[0].passingTracesId.begin(), Fractures[0].passingTracesId.end()); // Inserisci tutti gli elementi di vec1
+    AllTraces.insert(AllTraces.end(), Fractures[0].notPassingTracesId.begin(), Fractures[0].notPassingTracesId.end());
+    std::queue<Data::Fract> AllSubPolygons;
+    AllSubPolygons.push(Fractures[0]);
     PolygonalMeshLibrary::MakeCuts(AllTraces,
                                    Traces,
                                    PolygonalMesh,
                                    AllSubPolygons);
+
+    //for (auto & elem : )
+    /*
+    unsigned int j = 0;
+    for (auto& polygon : PolygonalMesh.Cell2DsVertices )
+    {
+        std::cout << j++ << " ";
+        for (auto& elem : polygon )
+            std::cout << elem << ", ";
+        std::cout << std::endl;
+    }
+    std::cout << std::endl;
     */
+
     return 0;
 }
