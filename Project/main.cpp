@@ -160,15 +160,17 @@ int main()
     PolygonalMeshLibrary::PolygonalMesh PolygonalMesh;
 
     std::list<unsigned int>  AllTraces;
+
     AllTraces.insert(AllTraces.end(), Fractures[0].passingTracesId.begin(), Fractures[0].passingTracesId.end()); // Inserisci tutti gli elementi di vec1
     AllTraces.push_back(Fractures[0].notPassingTracesId[0]); // Inserisci tutti gli elementi di vec1
     AllTraces.push_back(Fractures[0].notPassingTracesId[1]); // Inserisci tutti gli elementi di vec1
     AllTraces.push_back(Fractures[0].notPassingTracesId[2]);
     AllTraces.push_back(Fractures[0].notPassingTracesId[3]);
     AllTraces.push_back(Fractures[0].notPassingTracesId[4]);
+    AllTraces.push_back(Fractures[0].notPassingTracesId[5]);
 
 
-    AllTraces.insert(AllTraces.end(), Fractures[0].notPassingTracesId.begin(), Fractures[0].notPassingTracesId.end());
+    //AllTraces.insert(AllTraces.end(), Fractures[0].notPassingTracesId.begin(), Fractures[0].notPassingTracesId.end());
     std::queue<Data::Fract> AllSubPolygons;
     AllSubPolygons.push(Fractures[0]);
     PolygonalMeshLibrary::MakeCuts(AllTraces,
