@@ -562,6 +562,7 @@ bool SolveSystem(const Eigen::Vector3d& Direction,
     }
 
     return Flag;
+
 }
 
 /*
@@ -634,7 +635,6 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
 
         //devo selezionare la traccia più lunga fra quelle del sottopoligono
         Data::Trace CurrentTrace;
-        //se metto reference vicino ad auto mi fa errore
         bool FineRicorsione = true;
         for (auto it = AllTraces.begin(); it != AllTraces.end(); it++)
         {
@@ -674,17 +674,30 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
                                            PolygonMesh,
                                            AllSubPolygons);
         }
-
+        else
+        {
         //estraggo gli estremi e individuo la direzione sulla quale giace la traccia
         Eigen::Vector3d FirstExtreme = CurrentTrace.ExtremesCoord[0];
         Eigen::Vector3d SecondExtreme = CurrentTrace.ExtremesCoord[1];
         Eigen::Vector3d Direction = SecondExtreme - FirstExtreme;
-        //per ogni vertice del poligono controllo la sua posizione reciproca rispetto alla traccia
-        //inizio a creare un std::vector ma fose meglio array(bisogna controllare costi computazionali) sappiamo dimensioni a priori??
 
+        //per ogni vertice del poligono controllo la sua posizione reciproca rispetto alla traccia
         std::vector<Eigen::Vector3d> estremiTracce;
         estremiTracce.reserve(2);
 
+        for(unsigned int i = 0; i < CurrentPolygon.vertices.cols(); i++)
+        {
+            //solve sistem
+            Eigen::Vector3d Solution;
+            if(PolygonalMeshLibrary::SolveSystem(Direction,
+                                                  CurrentPolygon.vertices.col(i),
+                                                  CurrentPolygon.vertices.col((i - 1) % CurrentPolygon.vertices.cols()),
+                                                  FirstExtreme,
+                                                  Solution))
+                estremiTracce.push_back(Solution);
+        }
+
+        /*
         bool PreviousCheck = false;
         Eigen::Vector3d congiungente = CurrentPolygon.vertices.col(CurrentPolygon.vertices.cols()-1) - FirstExtreme;
         Eigen::Vector3d v= Direction.cross(congiungente);
@@ -697,32 +710,24 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
              * 2 il secondo estremo è sul lato
              * 3 nessuno dei due estremi è sul lato, controllo se devo prolungare
              */
+        /*
             bool CurrentCheck = false;
 
-
-            if(FractureOperations::isPointOnEdge(FirstExtreme, CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i - 1) % CurrentPolygon.vertices.cols())))
+            Eigen::Vector3d congiungente = CurrentPolygon.vertices.col(i) - FirstExtreme;
+            Eigen::Vector3d v= Direction.cross(congiungente);
+            if (v.dot(CurrentPolygon.normals)>-tol)
+                CurrentCheck = true;
+            if(PreviousCheck != CurrentCheck)
             {
-                estremiTracce.push_back(FirstExtreme);
-                Eigen::Vector3d congiungente = CurrentPolygon.vertices.col(i) - FirstExtreme;
-                Eigen::Vector3d v= Direction.cross(congiungente);
-                if (v.dot(CurrentPolygon.normals)>-tol) //controlla > tol oppure >= -tol
-                    CurrentCheck = true;
-            }
-            else if(FractureOperations::isPointOnEdge(SecondExtreme, CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i - 1) % CurrentPolygon.vertices.cols())))
-            {
-                estremiTracce.push_back(SecondExtreme);
-                Eigen::Vector3d congiungente = CurrentPolygon.vertices.col(i) - FirstExtreme;
-                Eigen::Vector3d v= Direction.cross(congiungente);
-                if (v.dot(CurrentPolygon.normals)>-tol) //controlla > tol oppure >= -tol
-                    CurrentCheck = true;
-            }
-            else
-            {
-                Eigen::Vector3d congiungente = CurrentPolygon.vertices.col(i) - FirstExtreme;
-                Eigen::Vector3d v= Direction.cross(congiungente);
-                if (v.dot(CurrentPolygon.normals)>-tol) //controlla > tol oppure >= -tol
-                    CurrentCheck = true;
-                if(PreviousCheck != CurrentCheck)
+                if(FractureOperations::isPointOnEdge(FirstExtreme, CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i - 1) % CurrentPolygon.vertices.cols())))
+                {
+                    estremiTracce.push_back(FirstExtreme);
+                }
+                else if(FractureOperations::isPointOnEdge(SecondExtreme, CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i - 1) % CurrentPolygon.vertices.cols())))
+                {
+                    estremiTracce.push_back(SecondExtreme);
+                }
+                else
                 {
                     //solve sistem
                     Eigen::Vector3d Solution;
@@ -731,14 +736,12 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
                                                           CurrentPolygon.vertices.col((i - 1) % CurrentPolygon.vertices.cols()),
                                                           FirstExtreme,
                                                           Solution))
-                    {
                         estremiTracce.push_back(Solution);
-                    }
                 }
             }
             PreviousCheck = CurrentCheck;
         }
-
+        */
         for (auto& elem : estremiTracce)
             std::cout <<elem.transpose() << std::endl;
 
@@ -758,9 +761,9 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
         std::vector<Eigen::Vector3d> FirstSide;
 
         unsigned int i = 0;
-        congiungente = CurrentPolygon.vertices.col(i) - FirstExtreme;
+        Eigen::Vector3d congiungente = CurrentPolygon.vertices.col(i) - FirstExtreme;
 
-        v= Direction.cross(congiungente);
+        Eigen::Vector3d v= Direction.cross(congiungente);
 
         while (v.dot(CurrentPolygon.normals)> tol )
         {
@@ -815,7 +818,7 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
 
         //se uno dei due poligoni è degenere, vuol dire la traccia è su un lato => l'altro poligono coincide con
         //current polygon pertanto non lo salvo
-        if(FirstSide.size() > 2 && SecondSide.size() >2)
+        if(FirstSide.size() > 2)
         {
             //copio std::vector in Eigen::Matrix
             Eigen::MatrixXd SubPolygon(3,FirstSide.size());
@@ -834,7 +837,10 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
             //std::cout << SubPolygon << std::endl;
             //std::cout << std::endl;
             AllSubPolygons.push(subpolygon);
+        }
 
+        if(SecondSide.size() > 2)
+        {
             //copio std::vector in Eigen::Matrix
             Eigen::MatrixXd SecondSubPolygon(3,SecondSide.size());
             //std::cout << "oke" << std::endl;
@@ -864,15 +870,6 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
             }
             */
         }
-        else
-        {
-            //sicuramnete è sbagliato
-            AllTraces.remove(CurrentTrace.TraceId);
-            PolygonalMeshLibrary::MakeCuts(AllTraces,
-                                           traces,
-                                           PolygonMesh,
-                                           AllSubPolygons);
-        }
 
         //std::cout << SecondSide.size() << std::endl;
 
@@ -885,6 +882,7 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
         else if (FractureOperations::isPointInPolygonOK(CurrentTrace.ExtremesCoord[0], CurrentPolygon))
         {
 
+            /*
             std::cout << CurrentPolygon.vertices << std::endl;
             std::cout << std::endl;
 
@@ -895,9 +893,8 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
             std::cout << estremiTracce.back().transpose() << std::endl;
             std::cout << estremiTracce.front().transpose() << std::endl;
             std::cout << std::endl;
+            */
 
-
-            //vedi bene front e back, perchè secondo me è al contrario
             //aggiungi tol
             if((CurrentTrace.ExtremesCoord[1] - estremiTracce.back()).norm() < (CurrentTrace.ExtremesCoord[1] - estremiTracce.front()).norm() )
                 traces[CurrentTrace.TraceId].ExtremesCoord[0] = estremiTracce.back();
@@ -939,6 +936,7 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
                                        traces,
                                        PolygonMesh,
                                        AllSubPolygons);
+        }
     }
 
     return true;
