@@ -543,6 +543,9 @@ bool SolveSystem(const Eigen::Vector3d& Direction,
                  Eigen::Vector3d& Solution)
 {
     bool Flag = false;
+    //std::cout << "vertice1 " << vertice1.transpose() << std::endl;
+    //std::cout << "vertice2 " << vertice2.transpose() << std::endl;
+
     Eigen::MatrixXd A(3,2);
     A.col(0) = Direction;
     A.col(1) = vertice1 - vertice2;
@@ -550,16 +553,32 @@ bool SolveSystem(const Eigen::Vector3d& Direction,
     Eigen::Vector3d b = vertice1 - point;
 
     Eigen::Vector2d paramVert = A.colPivHouseholderQr().solve(b);
+
     Eigen::Vector3d Candidate1= vertice1 + paramVert[1]*(vertice2-vertice1);
     Eigen::Vector3d Candidate2 = point + paramVert[0]* Direction;
 
-    if ( ((Candidate1 - Candidate2)[0] < tol && (Candidate1 - Candidate2)[0] > -tol) &&
-        ((Candidate1 - Candidate2)[1] < tol && (Candidate1 - Candidate2)[1] > -tol) &&
-        ((Candidate1 - Candidate2)[2] < tol && (Candidate1 - Candidate2)[2] > -tol))
-    {
-        Solution = Candidate1;
-        Flag = true;
-    }
+    //std::cout <<  "Candidate1 " << Candidate1.transpose() <<  std::endl;
+    //std::cout  << "Candidate2 " << Candidate2.transpose() << std::endl;
+
+    /*
+    std::cout << tol << std::endl;
+    std::cout << ((Candidate1 - Candidate2)[0]) << std::endl;
+    //std::cout << (Candidate1 - Candidate2)[0] > -tol << std::endl;
+
+    std::cout << ((Candidate1 - Candidate2)[1])  << std::endl;
+    //std::cout << (Candidate1 - Candidate2)[1] > -tol << std::endl;
+
+    std::cout << ((Candidate1 - Candidate2)[2]) << std::endl;
+    //std::cout << (Candidate1 - Candidate2)[2] > -tol << std::endl;
+    */
+
+    if ( ((Candidate1 - Candidate2).norm() < tol))
+        {
+            Solution = Candidate1;
+            //std::cout <<  Candidate1 << std::endl;
+            Flag = true;
+        }
+
 
     return Flag;
 
@@ -633,6 +652,8 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
             CurrentPolygon = AllSubPolygons.front();
         }
 
+        std::cout << CurrentPolygon.vertices << std::endl;
+
         //devo selezionare la traccia più lunga fra quelle del sottopoligono
         Data::Trace CurrentTrace;
         bool FineRicorsione = true;
@@ -685,19 +706,6 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
         std::vector<Eigen::Vector3d> estremiTracce;
         estremiTracce.reserve(2);
 
-        for(unsigned int i = 0; i < CurrentPolygon.vertices.cols(); i++)
-        {
-            //solve sistem
-            Eigen::Vector3d Solution;
-            if(PolygonalMeshLibrary::SolveSystem(Direction,
-                                                  CurrentPolygon.vertices.col(i),
-                                                  CurrentPolygon.vertices.col((i - 1) % CurrentPolygon.vertices.cols()),
-                                                  FirstExtreme,
-                                                  Solution))
-                estremiTracce.push_back(Solution);
-        }
-
-        /*
         bool PreviousCheck = false;
         Eigen::Vector3d congiungente = CurrentPolygon.vertices.col(CurrentPolygon.vertices.cols()-1) - FirstExtreme;
         Eigen::Vector3d v= Direction.cross(congiungente);
@@ -710,7 +718,6 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
              * 2 il secondo estremo è sul lato
              * 3 nessuno dei due estremi è sul lato, controllo se devo prolungare
              */
-        /*
             bool CurrentCheck = false;
 
             Eigen::Vector3d congiungente = CurrentPolygon.vertices.col(i) - FirstExtreme;
@@ -729,11 +736,20 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
                 }
                 else
                 {
+                    unsigned int previusIndex;
+                    if ( i == 0)
+                    {
+                        previusIndex =  CurrentPolygon.vertices.cols() - 1;
+                    }
+                    else
+                    {
+                        previusIndex = i-1;
+                    }
                     //solve sistem
                     Eigen::Vector3d Solution;
                     if(PolygonalMeshLibrary::SolveSystem(Direction,
                                                           CurrentPolygon.vertices.col(i),
-                                                          CurrentPolygon.vertices.col((i - 1) % CurrentPolygon.vertices.cols()),
+                                                          CurrentPolygon.vertices.col(previusIndex),
                                                           FirstExtreme,
                                                           Solution))
                         estremiTracce.push_back(Solution);
@@ -741,9 +757,10 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
             }
             PreviousCheck = CurrentCheck;
         }
-        */
         for (auto& elem : estremiTracce)
             std::cout <<elem.transpose() << std::endl;
+        std::cout << std::endl;
+
 
         if((estremiTracce.front() - estremiTracce.back()).norm() < tol )
         {
@@ -761,9 +778,9 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
         std::vector<Eigen::Vector3d> FirstSide;
 
         unsigned int i = 0;
-        Eigen::Vector3d congiungente = CurrentPolygon.vertices.col(i) - FirstExtreme;
+        congiungente = CurrentPolygon.vertices.col(i) - FirstExtreme;
 
-        Eigen::Vector3d v= Direction.cross(congiungente);
+        v= Direction.cross(congiungente);
 
         while (v.dot(CurrentPolygon.normals)> tol )
         {
@@ -856,7 +873,7 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
             //subpolygon.notPassingTracesId= Fracture.notPassingTracesId;
             secondsubpolygon.normals = CurrentPolygon.normals;
             //aggiungo alla fine della lista i sottopoligoni da analizzare
-            //std::cout << SubPolygon << std::endl;
+            //std::cout << SecondSubPolygon << std::endl;
             //std::cout << std::endl;
             AllSubPolygons.push(secondsubpolygon);
 
@@ -906,8 +923,8 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
                 AllTraces.remove(CurrentTrace.TraceId);
             }
 
-            std::cout << traces[CurrentTrace.TraceId].ExtremesCoord[0].transpose() << std::endl;
-            std::cout << traces[CurrentTrace.TraceId].ExtremesCoord[1].transpose() << std::endl;
+            //std::cout << traces[CurrentTrace.TraceId].ExtremesCoord[0].transpose() << std::endl;
+            //std::cout << traces[CurrentTrace.TraceId].ExtremesCoord[1].transpose() << std::endl;
             //std::cout << std::endl;
         }
         else if (FractureOperations::isPointInPolygonOK(CurrentTrace.ExtremesCoord[1], CurrentPolygon))
@@ -945,11 +962,18 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
 void CreateMesh(const Data::Fract& Fracture,
                 PolygonalMeshLibrary::PolygonalMesh& PolygonMesh)
 {
-    std::cout << Fracture.vertices << std::endl;
-    std::cout << std::endl;
+    //std::cout << Fracture.vertices << std::endl;
+    //std::cout << std::endl;
 
-    std::vector<unsigned int> IdVectices;
+   // std::vector<unsigned int> IdVectices;
     //salvo i vertici
+
+    for(unsigned int i = 0; i < Fracture.vertices.cols(); i++)
+    {
+        PolygonMesh.coord0DsCell.push_back(Fracture.vertices.col(i));
+    }
+
+    /*
     for(unsigned int i = 0; i < Fracture.vertices.cols(); i++)
     {
         auto variabile = std::find(PolygonMesh.coord0DsCell.begin(), PolygonMesh.coord0DsCell.end(), Fracture.vertices.col(i));
@@ -965,7 +989,7 @@ void CreateMesh(const Data::Fract& Fracture,
             IdVectices.push_back(position);
         }
     }
-
+*/
 
     /* ho pensato una cvosa ,a non so se può avere senso (fammi sap)
      * noi per ogni polignono, cicliamo sui vertici e  salviamo l'id in Polygonal mesh
@@ -980,6 +1004,7 @@ void CreateMesh(const Data::Fract& Fracture,
 
     std::vector<unsigned int> IdEdge;
 
+    /*
     for(unsigned int i = 0; i < Fracture.vertices.cols(); i++)
     {
         std::array<unsigned int, 2> edge1 = {IdVectices[i], IdVectices[(i-1) % Fracture.vertices.cols()]};
@@ -1009,6 +1034,8 @@ void CreateMesh(const Data::Fract& Fracture,
 
     PolygonMesh.Cell2DsVertices.push_back(IdVectices);
     PolygonMesh.Cell2DsEdges.push_back(IdEdge);
+*/
+
 }
 }
 
