@@ -94,7 +94,7 @@ void Mergesort(std::vector<unsigned int>& data,
 namespace PolygonalMeshLibrary
 {
 bool MakeCuts(std::list<unsigned int>& AllTraces,
-              std::vector<Data::Trace> traces,
+              std::vector<Data::Trace>& traces,
               PolygonalMeshLibrary::PolygonalMesh& PolygonMesh,
               std::queue<Data::Fract>& AllSubPolygons);
 

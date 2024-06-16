@@ -549,6 +549,7 @@ bool SolveSystem(const Eigen::Vector3d& Direction,
     Eigen::MatrixXd A(3,2);
     A.col(0) = Direction;
     A.col(1) = vertice1 - vertice2;
+    std::cout << A << std::endl;
 
     Eigen::Vector3d b = vertice1 - point;
 
@@ -557,8 +558,8 @@ bool SolveSystem(const Eigen::Vector3d& Direction,
     Eigen::Vector3d Candidate1= vertice1 + paramVert[1]*(vertice2-vertice1);
     Eigen::Vector3d Candidate2 = point + paramVert[0]* Direction;
 
-    //std::cout <<  "Candidate1 " << Candidate1.transpose() <<  std::endl;
-    //std::cout  << "Candidate2 " << Candidate2.transpose() << std::endl;
+    std::cout <<  "Candidate1 " << Candidate1.transpose() <<  std::endl;
+    std::cout  << "Candidate2 " << Candidate2.transpose() << std::endl;
 
     /*
     std::cout << tol << std::endl;
@@ -623,7 +624,7 @@ bool ConsideringTollerance(const Data::Fract& CurrentPolygon,
 */
 
 bool MakeCuts(std::list<unsigned int>& AllTraces,
-              std::vector<Data::Trace> traces,
+              std::vector<Data::Trace> &traces,
               PolygonalMeshLibrary::PolygonalMesh& PolygonMesh,
               std::queue<Data::Fract>& AllSubPolygons)
 {
@@ -766,6 +767,23 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
 
         if(estremiTracce.size() < 2 )
         {
+            std::cerr << " problem " << std::endl;
+            std::cout << CurrentTrace.ExtremesCoord[0].transpose() << " " <<  CurrentTrace.ExtremesCoord[1].transpose() << std::endl;
+
+            for(unsigned int i = 0; i < CurrentPolygon.vertices.cols(); i++)
+            {
+                if((CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[0]).norm() < tol ||
+                    (CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[1]).norm() < tol)
+                {
+                    if(FractureOperations::isPointOnEdge(CurrentTrace.ExtremesCoord[0], CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols())) ||
+                       FractureOperations::isPointOnEdge(CurrentTrace.ExtremesCoord[1], CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols())) )
+                    {
+                        std::cerr << "non so " << std::endl;
+                        AllTraces.remove(CurrentTrace.TraceId);
+                    }
+                }
+            }
+
             PolygonalMeshLibrary::CreateMesh(CurrentPolygon,
                                              PolygonMesh);
 

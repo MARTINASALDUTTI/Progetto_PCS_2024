@@ -104,7 +104,6 @@ int main()
     std::vector<PolygonalMeshLibrary::PolygonalMesh> Meshes;
     Meshes.reserve(Fractures.size());
 
-    /*
     for (unsigned int i = 0; i < Fractures.size(); i++)
     {
         //per ogni frattura, salvo in un unico vettore tracce passanti ordinate per lunghezza decrescente +
@@ -115,13 +114,15 @@ int main()
         std::cout << "frattura numero: " << i << std::endl;
         if (Fractures[i].passingTracesId.size() + Fractures[i].notPassingTracesId.size()!= 0)
         {
+            std::vector<Data::Trace> TracesCopy;
+            TracesCopy = Traces;
             std::list<unsigned int>  AllTraces;
             AllTraces.insert(AllTraces.end(), Fractures[i].passingTracesId.begin(), Fractures[i].passingTracesId.end()); // Inserisci tutti gli elementi di vec1
             AllTraces.insert(AllTraces.end(), Fractures[i].notPassingTracesId.begin(), Fractures[i].notPassingTracesId.end());
             std::queue<Data::Fract> AllSubPolygons;
             AllSubPolygons.push(Fractures[i]);
             PolygonalMeshLibrary::MakeCuts(AllTraces,
-                                           Traces,
+                                           TracesCopy,
                                            PolygonalMesh,
                                            AllSubPolygons);
         }
@@ -156,7 +157,8 @@ int main()
         }
         std::cout << std::endl;
         */
-    //}
+    }
+    /*
     PolygonalMeshLibrary::PolygonalMesh PolygonalMesh;
 
     std::list<unsigned int>  AllTraces;
