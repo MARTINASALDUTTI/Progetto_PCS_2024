@@ -126,85 +126,25 @@ int main()
                                            PolygonalMesh,
                                            AllSubPolygons);
         }
-        //in caso si può chiamare direttamente createmesh
-        //oppure Cell0DId+1 (forse meglio);
-        PolygonalMesh.Num0DsCell = PolygonalMesh.coord0DsCell.size();
-        PolygonalMesh.Num1DsCell = PolygonalMesh.coord1DsCell.size();
+        PolygonalMeshLibrary::CreateMesh(PolygonalMesh);
+
+        PolygonalMesh.Num0DsCell = PolygonalMesh.coord0DsCellMap.size();
+        PolygonalMesh.Num1DsCell = PolygonalMesh.Cell1DMap.size();
         PolygonalMesh.Num2DsCell = PolygonalMesh.Cell2DsVertices.size();
 
         Meshes.push_back(PolygonalMesh);
-
-
         /*
-        for (auto& elem : PolygonalMesh.coord0DsCell )
-            std::cout << elem.transpose() << ", " << std::endl;
-        std::cout << std::endl;
-
-        unsigned int j = 0;
-        for (auto& elem : PolygonalMesh.coord1DsCell_Id0DS )
-            std::cout << j++ << " " << elem[0] << " " << elem[1] << std::endl;
-        std::cout << std::endl;
-
-
-
-        unsigned int j = 0;
-        for (auto& polygon : PolygonalMesh.Cell2DsVertices )
-        {
-            std::cout << j++ << " ";
-            for (auto& elem : polygon )
-                std::cout << elem << ", ";
-            std::cout << std::endl;
+        for (const auto& pair : PolygonalMesh.coord0DsCellMap) {
+            std::cout << "id vertice: " << pair.first << " - Valore: "
+                      << pair.second.transpose() << std::endl;
         }
-        std::cout << std::endl;
+
+        for (const auto& pair : PolygonalMesh.Cell1DMap) {
+            std::cout << "id lato: " << pair.first << " - Valore: ["
+                      << pair.second[0] << " " << pair.second[1] << std::endl;
+        }
         */
     }
-    /*
-    PolygonalMeshLibrary::PolygonalMesh PolygonalMesh;
-
-    std::list<unsigned int>  AllTraces;
-
-    AllTraces.insert(AllTraces.end(), Fractures[0].passingTracesId.begin(), Fractures[0].passingTracesId.end()); // Inserisci tutti gli elementi di vec1
-    AllTraces.push_back(Fractures[0].notPassingTracesId[0]); // Inserisci tutti gli elementi di vec1
-    AllTraces.push_back(Fractures[0].notPassingTracesId[1]); // Inserisci tutti gli elementi di vec1
-    AllTraces.push_back(Fractures[0].notPassingTracesId[2]);
-    AllTraces.push_back(Fractures[0].notPassingTracesId[3]);
-    AllTraces.push_back(Fractures[0].notPassingTracesId[4]);
-    AllTraces.push_back(Fractures[0].notPassingTracesId[5]);
-
-
-    //AllTraces.insert(AllTraces.end(), Fractures[0].notPassingTracesId.begin(), Fractures[0].notPassingTracesId.end());
-    std::queue<Data::Fract> AllSubPolygons;
-    AllSubPolygons.push(Fractures[0]);
-    PolygonalMeshLibrary::MakeCuts(AllTraces,
-                                   Traces,
-                                   PolygonalMesh,
-                                   AllSubPolygons);
-
-
-
-    for (auto& elem : PolygonalMesh.coord0DsCell )
-        std::cout << elem.transpose() << ", " << std::endl;
-    std::cout << std::endl;
-
-    unsigned int j = 0;
-    for (auto& elem : PolygonalMesh.coord1DsCell_Id0DS )
-        std::cout << j++ << " " << elem[0] << " " << elem[1] << std::endl;
-    std::cout << std::endl;
-
-
-    //for (auto & elem : )
-
-    /*
-    unsigned int j = 0;
-    for (auto& polygon : PolygonalMesh.Cell2DsVertices )
-    {
-        std::cout << j++ << " ";
-        for (auto& elem : polygon )
-            std::cout << elem << ", ";
-        std::cout << std::endl;
-    }
-    std::cout << std::endl;
-    */
 
     return 0;
 }
