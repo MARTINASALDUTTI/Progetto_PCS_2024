@@ -1,7 +1,5 @@
 #pragma once
 
-#include <iostream>
-#include <sstream>
 #include "Eigen/Eigen"
 
 namespace Data{

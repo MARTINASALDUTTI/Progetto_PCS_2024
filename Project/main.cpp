@@ -1,5 +1,4 @@
 #include <iostream>
-#include <sstream>
 #include "Eigen/Eigen"
 
 #include "Utils.hpp"
@@ -7,7 +6,7 @@
 int main()
 {
     constexpr double tol = 10e-10;
-    std::string inputFileName = "./DFN/FR3_data.txt";
+    std::string inputFileName = "./DFN/FR10_data.txt";
     std::string outputFileName = "./DFN/TRACE_data.txt";
     std::string outputFileName2 = "./DFN/Output2.txt";
 
@@ -17,7 +16,6 @@ int main()
     */
     unsigned int nFracture = 0;
     std::vector<Data::Fract> Fractures;
-
     if (!Data::ImportData(inputFileName, nFracture, Fractures))
     {
         std::cerr<< "error: import failed"<< std::endl;
@@ -78,7 +76,6 @@ int main()
                     else
                         Fractures[j].passingTracesId.push_back(foundTrace.TraceId);
                 }
-                std::cout << " book case " << std::endl;
             }
         }
     }
@@ -99,7 +96,6 @@ int main()
     }
     else
         std::cout << "Export successful " << std::endl;
-    //secondo me bisogna creare un std::vector di PolygonalMesh e riservare tanto spazio quanrto le fratture
 
     std::vector<PolygonalMeshLibrary::PolygonalMesh> Meshes;
     Meshes.reserve(Fractures.size());
@@ -111,7 +107,6 @@ int main()
 
         PolygonalMeshLibrary::PolygonalMesh PolygonalMesh;
         //definisco ricorsivamente la funzione che fa i tagli
-        std::cout << "frattura numero: " << i << std::endl;
         if (Fractures[i].passingTracesId.size() + Fractures[i].notPassingTracesId.size()!= 0)
         {
             std::vector<Data::Trace> TracesCopy;
@@ -133,16 +128,6 @@ int main()
         PolygonalMesh.Num2DsCell = PolygonalMesh.Cell2DsVertices.size();
 
         Meshes.push_back(PolygonalMesh);
-
-        for (const auto& pair : PolygonalMesh.coord0DsCellMap) {
-            std::cout << "id vertice: " << pair.first << " - Valore: "
-                      << pair.second.transpose() << std::endl;
-        }
-
-        for (const auto& pair : PolygonalMesh.Cell1DMap) {
-            std::cout << "id lato: " << pair.first << " - Valore: ["
-                      << pair.second[0] << " " << pair.second[1] << std::endl;
-        }
     }
 
     return 0;
