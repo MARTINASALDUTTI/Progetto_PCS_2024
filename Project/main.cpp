@@ -7,7 +7,7 @@
 int main()
 {
     constexpr double tol = 10e-10;
-    std::string inputFileName = "./DFN/FR10_data.txt";
+    std::string inputFileName = "./DFN/FR3_data.txt";
     std::string outputFileName = "./DFN/TRACE_data.txt";
     std::string outputFileName2 = "./DFN/Output2.txt";
 

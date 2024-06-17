@@ -283,41 +283,16 @@ bool findExtreme(const Eigen::Vector3d& V1,
 }
 
 bool isPointInPolygon(const Eigen::Vector3d& point,
-                      const Eigen::MatrixXd& Fracture)
-{
-    double tol = 1e-10;
-    int numVertices = Fracture.cols();
-
-    if (numVertices < 4)
-    {
-        return false;
-    }
-
-    Eigen::Vector3d AB = Fracture.col(1) - Fracture.col(0);
-    Eigen::Vector3d AD = Fracture.col(3) - Fracture.col(0); //ricorda che hai cambiato il tre in due
-    Eigen::Vector3d AP = point - Fracture.col(0);
-
-    double dotAB_AB = AB.dot(AB);
-    double dotAD_AD = AD.dot(AD);
-    double dotAP_AB = AP.dot(AB);
-    double dotAP_AD = AP.dot(AD);
-
-    double lambda1 = dotAP_AB / dotAB_AB;
-    double lambda2 = dotAP_AD / dotAD_AD;
-
-    return (lambda1 >= -tol && lambda1 <= 1.0+tol && lambda2 >= -tol && lambda2 <= 1+tol);
-}
-
-bool isPointInPolygonOK(const Eigen::Vector3d& point,
-                        const Data::Fract& Fracture)
+                         const Eigen::MatrixXd& Polygon,
+                         const Eigen::Vector3d& normal)
 {
     bool PointInPolygon = true;
-    for(unsigned int i = 0; i < Fracture.vertices.cols(); i++)
+    for(unsigned int i = 0; i < Polygon.cols(); i++)
     {
-        Eigen::Vector3d vector1 = Fracture.vertices.col((i+1) % Fracture.vertices.cols()) - Fracture.vertices.col(i);
-        Eigen::Vector3d vector2 = point - Fracture.vertices.col(i);
+        Eigen::Vector3d vector1 = Polygon.col((i+1) % Polygon.cols()) - Polygon.col(i);
+        Eigen::Vector3d vector2 = point - Polygon.col(i);
         Eigen::Vector3d CrossProduct = vector1.cross(vector2);
-        if(CrossProduct.dot(Fracture.normals) < -tol )
+        if(CrossProduct.dot(normal) < -tol )
             return !PointInPolygon;
     }
 
@@ -363,12 +338,12 @@ bool bookCase(const Data::Fract& FirstFracture,
     std::vector<Eigen::Vector3d> candidatePoints;
     for (unsigned int i = 0; i < FirstFracture.vertices.cols(); i++)
     {
-        if(isPointInPolygon(FirstFracture.vertices.col(i), SecondFracture.vertices))
+        if(isPointInPolygon(FirstFracture.vertices.col(i), SecondFracture.vertices, SecondFracture.normals))
             candidatePoints.push_back(FirstFracture.vertices.col(i));
     }
     for (unsigned int i = 0; i < SecondFracture.vertices.cols(); i++)
     {
-        if(isPointInPolygon(SecondFracture.vertices.col(i), FirstFracture.vertices))
+        if(isPointInPolygon(SecondFracture.vertices.col(i), FirstFracture.vertices, FirstFracture.normals))
             candidatePoints.push_back(SecondFracture.vertices.col(i));
     }
     if (candidatePoints.size() != 0)
@@ -429,7 +404,8 @@ bool findTraces(const Data::Fract& FirstFracture,
     std::vector<Eigen::VectorXd> extremePoints;
     for (unsigned int i = 0; i < CandidatePoints.size(); i++)
     {
-        if (isPointInPolygon(CandidatePoints[i], FirstFracture.vertices) && isPointInPolygon(CandidatePoints[i], SecondFracture.vertices))
+        if (FractureOperations::isPointInPolygon(CandidatePoints[i], FirstFracture.vertices,FirstFracture.normals ) &&
+            FractureOperations::isPointInPolygon(CandidatePoints[i], SecondFracture.vertices, SecondFracture.normals ))
             extremePoints.push_back(CandidatePoints[i]);
     }
 
@@ -608,8 +584,8 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
                 CurrentTrace = traces[*it];
                 //std::cout << "TraceId " << CurrentTrace.TraceId << std::endl;
                 // vedere come gestire casi in cui la traccia viene divisa fra due sotto poligoni e chiedere se bisogna farlo
-                if (FractureOperations::isPointInPolygonOK(CurrentTrace.ExtremesCoord[0], CurrentPolygon) ||
-                    FractureOperations::isPointInPolygonOK(CurrentTrace.ExtremesCoord[1], CurrentPolygon))
+                if (FractureOperations::isPointInPolygon(CurrentTrace.ExtremesCoord[0], CurrentPolygon.vertices, CurrentPolygon.normals) ||
+                    FractureOperations::isPointInPolygon(CurrentTrace.ExtremesCoord[1], CurrentPolygon.vertices, CurrentPolygon.normals))
                 {
                         /*quando la traccia è interna al sottopoligono
                      * FineRicorsione diventa false ed esco dal ciclo
@@ -829,12 +805,12 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
             //std::cout << SecondSide.size() << std::endl;
 
             //elimino la traccia considerata:
-            if (FractureOperations::isPointInPolygonOK(CurrentTrace.ExtremesCoord[0], CurrentPolygon) &&
-                FractureOperations::isPointInPolygonOK(CurrentTrace.ExtremesCoord[1], CurrentPolygon))
+            if (FractureOperations::isPointInPolygon(CurrentTrace.ExtremesCoord[0], CurrentPolygon.vertices, CurrentPolygon.normals) &&
+                FractureOperations::isPointInPolygon(CurrentTrace.ExtremesCoord[1], CurrentPolygon.vertices, CurrentPolygon.normals))
             {
                 AllTraces.remove(CurrentTrace.TraceId);
             }
-            else if (FractureOperations::isPointInPolygonOK(CurrentTrace.ExtremesCoord[0], CurrentPolygon))
+            else if (FractureOperations::isPointInPolygon(CurrentTrace.ExtremesCoord[0], CurrentPolygon.vertices, CurrentPolygon.normals))
             {
                 if((CurrentTrace.ExtremesCoord[1] - estremiTracce.back()).norm() < (CurrentTrace.ExtremesCoord[1] - estremiTracce.front()).norm() )
                     traces[CurrentTrace.TraceId].ExtremesCoord[0] = estremiTracce.back();
@@ -846,7 +822,7 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
                     AllTraces.remove(CurrentTrace.TraceId);
                 }
             }
-            else if (FractureOperations::isPointInPolygonOK(CurrentTrace.ExtremesCoord[1], CurrentPolygon))
+            else if (FractureOperations::isPointInPolygon(CurrentTrace.ExtremesCoord[1], CurrentPolygon.vertices, CurrentPolygon.normals))
             {
                 if((CurrentTrace.ExtremesCoord[0] - estremiTracce.back()).norm() < (CurrentTrace.ExtremesCoord[0] - estremiTracce.front()).norm() )
                 {
@@ -860,7 +836,6 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
                     AllTraces.remove(CurrentTrace.TraceId);
 
                 }
-                //std::cout << "problem qua" << std::endl;
             }
 
             traces[CurrentTrace.TraceId].length = (CurrentTrace.ExtremesCoord[0] - CurrentTrace.ExtremesCoord[0]).norm();
