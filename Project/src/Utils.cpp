@@ -598,8 +598,6 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
             CurrentPolygon = AllSubPolygons.front();
         }
 
-        //std::cout << CurrentPolygon.vertices << std::endl;
-
         //devo selezionare la traccia più lunga fra quelle del sottopoligono
         Data::Trace CurrentTrace;
         bool FineRicorsione = true;
@@ -619,12 +617,10 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
                      * Se non trovo questa traccia passo al poligonp suvccessivo
                      * FineRicorsione diventa true
                     */
-                    FineRicorsione = false;
+                    FineRicorsione = checking(CurrentPolygon, CurrentTrace, AllTraces, traces);
                 }
             }
         }
-
-        //std::cout << CurrentTrace.TraceId << " " << FineRicorsione << std::endl;
 
         if(FineRicorsione == true)
         {
@@ -680,7 +676,7 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
                 {
                     estremiTracce.push_back(SecondExtreme);
                 }
-                else
+                else if(PreviousCheck != CurrentCheck)
                 {
                     unsigned int previusIndex;
                     if ( i == 0)
@@ -700,80 +696,15 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
                                                           Solution))
                         estremiTracce.push_back(Solution);
                 }
-            }
             PreviousCheck = CurrentCheck;
+            }
         }
-
-
 
         if(estremiTracce.size() < 2 )
         {
             std::cout << " problem " << std::endl;
-            //std::cout << CurrentTrace.ExtremesCoord[0].transpose() << " " <<  CurrentTrace.ExtremesCoord[1].transpose() << std::endl;
             if(estremiTracce.size() == 0)
             {
-                for(unsigned int i = 0; i < CurrentPolygon.vertices.cols(); i++)
-                {
-                    if((CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[0]).norm() < tol ||
-                        (CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[1]).norm() < tol)
-                    {
-                        //Eigen::Vector3d edge = CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentPolygon.vertices.col(i);
-                        //Eigen::Vector3d CrossProduct = Direction.cross(edge);
-                        if(FractureOperations::isPointOnEdge(CurrentTrace.ExtremesCoord[0], CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols())) &&
-                            FractureOperations::isPointOnEdge(CurrentTrace.ExtremesCoord[1], CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols())) )
-                        {
-                            std::cout << CurrentTrace.ExtremesCoord[0] << std::endl;
-                            std::cout << CurrentTrace.ExtremesCoord[1] << std::endl;
-
-                            AllTraces.remove(CurrentTrace.TraceId);
-                        }
-                        /*
-                        else if(CrossProduct.norm() > tol)
-                        {
-                            std::cout << "uscente vertice " << std::endl;
-                            std::cout << CurrentTrace.ExtremesCoord[0] << std::endl;
-                            std::cout << CurrentTrace.ExtremesCoord[1] << std::endl;
-                        }
-                        */
-                        else if (FractureOperations::isPointOnEdge(CurrentTrace.ExtremesCoord[0], CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols())))
-                        {
-                            std::cout << "fhdkkd" << std::endl;
-                            if((CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[1]).norm() < (CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentTrace.ExtremesCoord[1]).norm())
-                            {
-                                //if ((CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[1]).norm() > tol &&
-                                 //   (CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[1]).norm() < traces[CurrentTrace.TraceId].length)
-                                //{
-                                    std::cout << i << " aito " << std::endl;
-                                    CurrentTrace.ExtremesCoord[0] = CurrentPolygon.vertices.col(i);
-                                //}
-                            }
-                            else
-                            {
-                               // if ((CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentTrace.ExtremesCoord[1]).norm() > tol &&
-                               //     (CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentTrace.ExtremesCoord[1]).norm() < traces[CurrentTrace.TraceId].length)
-                               // {
-                                    std::cout << i <<  " aiuto " << std::endl;
-                                    CurrentTrace.ExtremesCoord[0] = CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols());
-                                //}
-                            }
-                        }
-                        else if (FractureOperations::isPointOnEdge(CurrentTrace.ExtremesCoord[1], CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols())))
-                        {
-                            std::cout << "pippo" << std::endl;
-
-                            if((CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[0]).norm() < (CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentTrace.ExtremesCoord[0]).norm())
-                            {
-                                CurrentTrace.ExtremesCoord[1] = CurrentPolygon.vertices.col(i);
-                            }
-                            else
-                            {
-                                CurrentTrace.ExtremesCoord[1] = CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols());
-                            }
-                        }
-                    }
-                }
-            }
-
             PolygonalMeshLibrary::SavingSubpolygon(CurrentPolygon,
                                                    PolygonMesh);
 
@@ -783,14 +714,13 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
                                            traces,
                                            PolygonMesh,
                                            AllSubPolygons);
+            }
         }
         else
         {
-
             if((estremiTracce.front() - estremiTracce.back()).norm() < tol )
             {
                 std::cerr << " estremi tracce è un punto " << std::endl;
-
             }
             FirstExtreme = estremiTracce.front();
             Direction = estremiTracce.back() - FirstExtreme;
@@ -919,7 +849,9 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
             else if (FractureOperations::isPointInPolygonOK(CurrentTrace.ExtremesCoord[1], CurrentPolygon))
             {
                 if((CurrentTrace.ExtremesCoord[0] - estremiTracce.back()).norm() < (CurrentTrace.ExtremesCoord[0] - estremiTracce.front()).norm() )
+                {
                     traces[CurrentTrace.TraceId].ExtremesCoord[1] = estremiTracce.back();
+                }
                 else
                     traces[CurrentTrace.TraceId].ExtremesCoord[1] = estremiTracce.front();
 
@@ -931,6 +863,7 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
                 //std::cout << "problem qua" << std::endl;
             }
 
+            traces[CurrentTrace.TraceId].length = (CurrentTrace.ExtremesCoord[0] - CurrentTrace.ExtremesCoord[0]).norm();
 
             // Rimuovi il primo sottopoligono analizzato dalla lista
             AllSubPolygons.pop();
@@ -1073,81 +1006,82 @@ void CreateMesh(PolygonalMeshLibrary::PolygonalMesh& PolygonMesh)
 */
     }
     std::cout << "IdCell2d " << IdCell2d << std::endl;
+}
 
-
-
-    //}
-
-    /*
-    // Iterare attraverso la mappa per trovare il valore
-    auto it = std::find_if(coord0DsCellMap.begin(), coord0DsCellMap.end(),
-                           [&valueToFind](const std::pair<unsigned int, Eigen::Vector3d>& element) {
-                               return element.second == valueToFind;
-                           });
-
-    if (it != coord0DsCellMap.end()) {
-        std::cout << "Valore trovato. Chiave: " << it->first << std::endl;
-    } else {
-        std::cout << "Valore non trovato." << std::endl;
-    }
-
-    return 0;
-    */
-    /*
-    for(unsigned int i = 0; i < Fracture.vertices.cols(); i++)
+bool checking(const Data::Fract& CurrentPolygon,
+              Data::Trace& CurrentTrace,
+              std::list<unsigned int> &AllTraces,
+              std::vector<Data::Trace> &traces)
+{
+    for(unsigned int i = 0; i < CurrentPolygon.vertices.cols(); i++)
     {
-        auto vertice = PolygonMesh.coord0DsCellMap.insert(std::make_pair(IdCell0D, Fracture.vertices.col(i)));
-        if (vertice.second)
+        if((CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[0]).norm() < tol ||
+            (CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[1]).norm() < tol)
         {
-            std::cout << "Inserimento riuscito: " << vertice.first->first << " => " << vertice.first->second << std::endl;
-            IdCell0D++;
-        }
-        else
-        {
-            std::cout << "Chiave già esistente: " << vertice.first->first << std::endl;
-        }
-    }
-    */
-
-
-    /*
-    for(unsigned int i = 0; i < Fracture.vertices.cols(); i++)
-    {
-        bool AlreadyExists = false;
-        auto V1 = PolygonMesh.coord0DsCellMap.insert(std::make_pair(IdCell0D, Fracture.vertices.col(i)));
-        auto V2 = PolygonMesh.coord0DsCellMap.insert(std::make_pair(IdCell0D, Fracture.vertices.col((i + 1) % Fracture.vertices.cols())));
-        std::array<unsigned int, 2> edge = {V1.first->first, V2.first->first};
-        std::array<unsigned int, 2> edgeContr = {V2.first->first, V1.first->first};
-        for(auto it = PolygonMesh.Cell1DMap.begin(); it!= PolygonMesh.Cell1DMap.end(); it++)
-        {
-            if(!AlreadyExists)
+            //Eigen::Vector3d edge = CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentPolygon.vertices.col(i);
+            //Eigen::Vector3d CrossProduct = Direction.cross(edge);
+            if(FractureOperations::isPointOnEdge(CurrentTrace.ExtremesCoord[0], CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols())) &&
+                FractureOperations::isPointOnEdge(CurrentTrace.ExtremesCoord[1], CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols())) )
             {
-                if(it->second == edge || it->second == edgeContr)
+                std::cout << CurrentTrace.ExtremesCoord[0] << std::endl;
+                std::cout << CurrentTrace.ExtremesCoord[1] << std::endl;
+
+                AllTraces.remove(CurrentTrace.TraceId);
+            }
+            else if (FractureOperations::isPointOnEdge(CurrentTrace.ExtremesCoord[0], CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols())))
+            {
+                std::cout << "fhdkkd" << std::endl;
+                if((CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[1]).norm() < (CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentTrace.ExtremesCoord[1]).norm())
                 {
-                    AlreadyExists = true;
+                    if ((CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[1]).norm() > tol &&
+                        (CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[1]).norm() < traces[CurrentTrace.TraceId].length)
+                    {
+                        std::cout << i << " aito " << std::endl;
+                        CurrentTrace.ExtremesCoord[0] = CurrentPolygon.vertices.col(i);
+                        return true;
+                    }
+                }
+                else if((CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[1]).norm() > (CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentTrace.ExtremesCoord[1]).norm())
+                {
+                    if ((CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentTrace.ExtremesCoord[1]).norm() > tol &&
+                        (CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentTrace.ExtremesCoord[1]).norm() < traces[CurrentTrace.TraceId].length)
+                    {
+                        std::cout << i <<  " aiuto " << std::endl;
+                        CurrentTrace.ExtremesCoord[0] = CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols());
+                        return true;
+                    }
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            else if (FractureOperations::isPointOnEdge(CurrentTrace.ExtremesCoord[1], CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols())))
+            {
+                std::cout << "pippo 5" << std::endl;
+
+                if((CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[0]).norm() < (CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentTrace.ExtremesCoord[0]).norm())
+                {
+                    std::cout << i << " aito " << std::endl;
+                    CurrentTrace.ExtremesCoord[1] = CurrentPolygon.vertices.col(i);
+                    return true;
+                }
+                else if((CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[0]).norm() > (CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentTrace.ExtremesCoord[0]).norm())
+                {
+                    std::cout << i <<  " aiuto " << std::endl;
+                    CurrentTrace.ExtremesCoord[1] = CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols());
+                    return true;
+                }
+                else
+                {
+                    std::cout << " caso 5" << std::endl;
+                    return true;
                 }
             }
         }
-        if(!AlreadyExists)
-        {
-            auto new_edge = PolygonMesh.Cell1DMap.insert(std::make_pair(IdCell1D, edge));
-            IdCell1D++;
-        }
-*/
+    }
 
-    //}
-    /* ho pensato una cvosa ,a non so se può avere senso (fammi sap)
-     * noi per ogni polignono, cicliamo sui vertici e  salviamo l'id in Polygonal mesh
-     * poi per ogni polignono, cicliamo sui lati e  salviamo le coordinate in Polygonal mesh (dovremmo salvare gli Id)
-     * se facessimo così:
-     * per ogni polignono, cicliamo sui vertici e  salviamo l'id in Polygonal mesh e li salviamo in un vector o lista
-     * tramite l'indice di PolygonalMesh.coord0DsCell
-     * poi cicliamo for(unsigned int i = 0; i < Fracture.vertices.cols(); i++) e con i accediamo all'indice
-     */
-    // secondo me, l'ideale sarebbe usare un std::map a cui accedere con chiave l'id perchè è più basse il costo del find ma non ho capito come si fa a cercare per valore
-    //std::vector<unsigned int> IdEdge;
-
-//}
+    return false;
 }
 }
 

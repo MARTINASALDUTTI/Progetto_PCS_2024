@@ -178,8 +178,8 @@ TEST(TestUCDUtilities, UCDUtilities_Test1DsCell)
     edges.col(32) << 21, 22;
     edges.col(33) << 22, 15;
     edges.col(34) << 15, 20;
-    edges.col(35) << 4, 23;
-    edges.col(36) << 23, 12;
+    edges.col(35) << 12, 23;
+    edges.col(36) << 24, 12;
     edges.col(37) << 8, 24;
     edges.col(38) << 23, 8;
     edges.col(39) << 12, 25;

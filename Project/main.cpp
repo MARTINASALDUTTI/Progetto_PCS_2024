@@ -104,7 +104,7 @@ int main()
     std::vector<PolygonalMeshLibrary::PolygonalMesh> Meshes;
     Meshes.reserve(Fractures.size());
 
-    for (unsigned int i = 7; i < 8; i++)
+    for (unsigned int i = 0; i < 1; i++)
     {
         //per ogni frattura, salvo in un unico vettore tracce passanti ordinate per lunghezza decrescente +
         //tracce non ordinate per lunghezza decrescente
@@ -133,7 +133,7 @@ int main()
         PolygonalMesh.Num2DsCell = PolygonalMesh.Cell2DsVertices.size();
 
         Meshes.push_back(PolygonalMesh);
-        /*
+
         for (const auto& pair : PolygonalMesh.coord0DsCellMap) {
             std::cout << "id vertice: " << pair.first << " - Valore: "
                       << pair.second.transpose() << std::endl;
@@ -143,7 +143,6 @@ int main()
             std::cout << "id lato: " << pair.first << " - Valore: ["
                       << pair.second[0] << " " << pair.second[1] << std::endl;
         }
-        */
     }
 
     return 0;
