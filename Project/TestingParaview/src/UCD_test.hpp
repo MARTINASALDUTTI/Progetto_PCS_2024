@@ -9,6 +9,7 @@ TEST(TestUCDUtilities, UCDUtilities_Test0Ds)
 {
     const std::string exportFolder = "./";
 
+
     Eigen::MatrixXd points(3, 26);
     points.col(0) << 0.594717, 0.432365, 0.450509;
     points.col(1) << 0.450525, 0.709432, 0.250734;
@@ -36,6 +37,7 @@ TEST(TestUCDUtilities, UCDUtilities_Test0Ds)
     points.col(23) << 0.407083, 0.792907, 0.190545;
     points.col(24) << 0.433893, 0.744516, 0.2229;
     points.col(25) << 0.240595, 0.851491, 0.360475;
+
 
     Gedim::UCDUtilities exporter;
 
@@ -187,7 +189,6 @@ TEST(TestUCDUtilities, UCDUtilities_Test1DsCell)
     edges.col(41) << 9, 20;
     edges.col(42) << 23, 21;
     edges.col(43) << 25, 21;
-
 
     exporter.ExportSegments(exportFolder + "Cell1Ds.inp",
                             points,

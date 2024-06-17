@@ -104,7 +104,7 @@ int main()
     std::vector<PolygonalMeshLibrary::PolygonalMesh> Meshes;
     Meshes.reserve(Fractures.size());
 
-    for (unsigned int i = 0; i < 1; i++)
+    for (unsigned int i = 0; i < Fractures.size(); i++)
     {
         //per ogni frattura, salvo in un unico vettore tracce passanti ordinate per lunghezza decrescente +
         //tracce non ordinate per lunghezza decrescente
