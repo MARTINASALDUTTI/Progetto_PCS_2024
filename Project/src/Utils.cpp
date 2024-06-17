@@ -717,13 +717,58 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
                     if((CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[0]).norm() < tol ||
                         (CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[1]).norm() < tol)
                     {
-                        if(FractureOperations::isPointOnEdge(CurrentTrace.ExtremesCoord[0], CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols())) ||
+                        //Eigen::Vector3d edge = CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentPolygon.vertices.col(i);
+                        //Eigen::Vector3d CrossProduct = Direction.cross(edge);
+                        if(FractureOperations::isPointOnEdge(CurrentTrace.ExtremesCoord[0], CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols())) &&
                             FractureOperations::isPointOnEdge(CurrentTrace.ExtremesCoord[1], CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols())) )
                         {
                             std::cout << CurrentTrace.ExtremesCoord[0] << std::endl;
                             std::cout << CurrentTrace.ExtremesCoord[1] << std::endl;
 
                             AllTraces.remove(CurrentTrace.TraceId);
+                        }
+                        /*
+                        else if(CrossProduct.norm() > tol)
+                        {
+                            std::cout << "uscente vertice " << std::endl;
+                            std::cout << CurrentTrace.ExtremesCoord[0] << std::endl;
+                            std::cout << CurrentTrace.ExtremesCoord[1] << std::endl;
+                        }
+                        */
+                        else if (FractureOperations::isPointOnEdge(CurrentTrace.ExtremesCoord[0], CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols())))
+                        {
+                            std::cout << "fhdkkd" << std::endl;
+                            if((CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[1]).norm() < (CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentTrace.ExtremesCoord[1]).norm())
+                            {
+                                //if ((CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[1]).norm() > tol &&
+                                 //   (CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[1]).norm() < traces[CurrentTrace.TraceId].length)
+                                //{
+                                    std::cout << i << " aito " << std::endl;
+                                    CurrentTrace.ExtremesCoord[0] = CurrentPolygon.vertices.col(i);
+                                //}
+                            }
+                            else
+                            {
+                               // if ((CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentTrace.ExtremesCoord[1]).norm() > tol &&
+                               //     (CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentTrace.ExtremesCoord[1]).norm() < traces[CurrentTrace.TraceId].length)
+                               // {
+                                    std::cout << i <<  " aiuto " << std::endl;
+                                    CurrentTrace.ExtremesCoord[0] = CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols());
+                                //}
+                            }
+                        }
+                        else if (FractureOperations::isPointOnEdge(CurrentTrace.ExtremesCoord[1], CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols())))
+                        {
+                            std::cout << "pippo" << std::endl;
+
+                            if((CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[0]).norm() < (CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentTrace.ExtremesCoord[0]).norm())
+                            {
+                                CurrentTrace.ExtremesCoord[1] = CurrentPolygon.vertices.col(i);
+                            }
+                            else
+                            {
+                                CurrentTrace.ExtremesCoord[1] = CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols());
+                            }
                         }
                     }
                 }
