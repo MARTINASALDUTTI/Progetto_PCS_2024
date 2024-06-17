@@ -1,4 +1,5 @@
 #include <iostream>
+
 #include "Eigen/Eigen"
 
 #include "Utils.hpp"
@@ -24,7 +25,7 @@ int main()
     else
         std::cout << "Import successful" << std::endl;
 
-    std::vector<Data::Trace> Traces;
+    std::list<Data::Trace> traces_list;
     unsigned int count = 0;
     // Seleziono le fratture tra cui cercare le tracce e le trovo
     for (unsigned int i = 0; i < nFracture; i++)
@@ -46,7 +47,7 @@ int main()
                     if (FractureOperations::findTraces(Fractures[i], Fractures[j], t, foundTrace))
                     {                        
                         foundTrace.TraceId = (count)++;
-                        Traces.push_back(foundTrace);
+                        traces_list.push_back(foundTrace);
                         if (foundTrace.Tips[0] == false)
                             Fractures[i].passingTracesId.push_back(foundTrace.TraceId);
                         else
@@ -66,7 +67,7 @@ int main()
                 if (FractureOperations::bookCase(Fractures[i], Fractures[j], foundTrace))
                 {
                     foundTrace.TraceId = (count)++;
-                    Traces.push_back(foundTrace);
+                    traces_list.push_back(foundTrace);
                     if (foundTrace.Tips[0] == false)
                         Fractures[i].notPassingTracesId.push_back(foundTrace.TraceId);
                     else
@@ -78,6 +79,13 @@ int main()
                 }
             }
         }
+    }
+
+    std::vector<Data::Trace> Traces;
+    Traces.reserve(traces_list.size());
+    for(Data::Trace& trace :traces_list)
+    {
+        Traces.push_back(trace);
     }
 
     if (!Data::ExportData(outputFileName, Traces))
