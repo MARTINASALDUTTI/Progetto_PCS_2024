@@ -104,11 +104,6 @@ void CreateMesh(PolygonalMeshLibrary::PolygonalMesh& PolygonMesh);
 void SavingSubpolygon(const Data::Fract& CurrentPolygon,
                      PolygonalMeshLibrary::PolygonalMesh& PolygonMesh);
 
-bool ConsideringTollerance(const Data::Fract& CurrentPolygon,
-                           Eigen::MatrixXd& subpol1,
-                           Eigen::MatrixXd& subpol2,
-                           std::queue<Data::Fract>& AllSubPolygons);
-
 bool checking(const Data::Fract& CurrentPolygon,
               Data::Trace& CurrentTrace,
               std::list<unsigned int>& AllTraces,
