@@ -398,31 +398,35 @@ bool findTraces(const Data::Fract& FirstFracture,
     std::vector<Eigen::VectorXd> CandidatePoints;
     FractureOperations::findPosition(FirstFracture, t, P, CandidatePoints);
     FractureOperations::findPosition(SecondFracture, t, P, CandidatePoints);
+    std::cout << "FRATTURE: " << FirstFracture.FractId << " " << SecondFracture.FractId << " candidate points: \n" << CandidatePoints.size() << std::endl;
 
-    std::vector<Eigen::VectorXd> extremePoints;
+    std::vector<Eigen::VectorXd> potentialPoints;
     for (unsigned int i = 0; i < CandidatePoints.size(); i++)
     {
         if (FractureOperations::isPointInPolygon(CandidatePoints[i], FirstFracture.vertices,FirstFracture.normals ) &&
             FractureOperations::isPointInPolygon(CandidatePoints[i], SecondFracture.vertices, SecondFracture.normals ))
-            extremePoints.push_back(CandidatePoints[i]);
+            potentialPoints.push_back(CandidatePoints[i]);
     }
+    std::cout << " potential points: \n" << potentialPoints.size() << std::endl;
 
-    if (extremePoints.size() != 0)
+    if (potentialPoints.size() != 0)
     {
-        std::vector<Eigen::VectorXd> extremePointsOK;
-        extremePointsOK.push_back(extremePoints[0]);
+        std::vector<Eigen::VectorXd> extremePoints;
+        extremePoints.push_back(potentialPoints[0]);
 
-        for (unsigned int i = 1; i < extremePoints.size(); i++)
+        for (unsigned int i = 1; i < potentialPoints.size(); i++)
         {
-            if (extremePoints[i] != extremePoints[i-1])
-                extremePointsOK.push_back(extremePoints[i]);
+            if (potentialPoints[i] != potentialPoints[i-1])
+                extremePoints.push_back(potentialPoints[i]);
         }
+        std::cout << " extreme points: \n" << extremePoints.size() << std::endl;
+
 
         foundTrace.FractureIds[0] = FirstFracture.FractId;
         foundTrace.FractureIds[1] = SecondFracture.FractId;
 
-        foundTrace.ExtremesCoord[0] = extremePointsOK[0];
-        foundTrace.ExtremesCoord[1] = extremePointsOK[1];
+        foundTrace.ExtremesCoord[0] = extremePoints[0];
+        foundTrace.ExtremesCoord[1] = extremePoints[1];
 
         foundTrace.Tips[0] = !isTracePassing(FirstFracture.vertices, foundTrace.ExtremesCoord[0], foundTrace.ExtremesCoord[1]);
         foundTrace.Tips[1] = !isTracePassing(SecondFracture.vertices, foundTrace.ExtremesCoord[0], foundTrace.ExtremesCoord[1]);
