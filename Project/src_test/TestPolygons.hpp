@@ -11,7 +11,7 @@ constexpr double tol = 10e-10;
 
 using namespace testing;
 
-namespace UnitTesting
+namespace FractureOperations
 {
     TEST(FractureOperationsTEST, testfracDistance)
     {
@@ -167,5 +167,48 @@ namespace UnitTesting
         Data::Trace foundTrace;
         ASSERT_FALSE(FractureOperations::bookCase(FirstFracture, SecondFracture,foundTrace));
 
+    }
+}
+
+namespace SortLibrary
+{
+    TEST(SortLibraryTEST, testMergeSort)
+    {
+        std::vector<Data::Trace> vector_testMergeSort(6);
+        Data::Trace trace0;
+        trace0.TraceId = 0;
+        trace0.length = 3.0;
+        Data::Trace trace1;
+        trace1.TraceId = 1;
+        trace1.length = 1.0;
+        Data::Trace trace2;
+        trace2.TraceId = 2;
+        trace2.length = 0.5;
+        Data::Trace trace3;
+        trace3.TraceId = 3;
+        trace3.length = 8.0;
+        Data::Trace trace4;
+        trace4.TraceId = 4;
+        trace4.length = 5.0;
+        Data::Trace trace5;
+        trace5.TraceId = 5;
+        trace5.length = 2.0;
+        vector_testMergeSort[0] = trace0;
+        vector_testMergeSort[1] = trace1;
+        vector_testMergeSort[2] = trace2;
+        vector_testMergeSort[3] = trace3;
+        vector_testMergeSort[4] = trace4;
+        vector_testMergeSort[5] = trace5;
+
+        std::vector<unsigned int> vectorID_testMergeSort = {0, 1, 2, 3, 4, 5};
+
+        SortLibrary::Mergesort(vectorID_testMergeSort, vector_testMergeSort);
+
+        EXPECT_EQ(vectorID_testMergeSort[0], 3);
+        EXPECT_EQ(vectorID_testMergeSort[1], 4);
+        EXPECT_EQ(vectorID_testMergeSort[2], 0);
+        EXPECT_EQ(vectorID_testMergeSort[3], 5);
+        EXPECT_EQ(vectorID_testMergeSort[4], 1);
+        EXPECT_EQ(vectorID_testMergeSort[5], 2);
     }
 }

@@ -5,7 +5,7 @@
 #include <gtest/gtest.h>
 
 // ***************************************************************************
-TEST(TestUCDUtilities, UCDUtilities_Test0Ds)
+TEST(TestUCDUtilities, Test0Ds)
 {
     const std::string exportFolder = "./";
 
@@ -47,7 +47,7 @@ TEST(TestUCDUtilities, UCDUtilities_Test0Ds)
 }
 // ***************************************************************************
 
-TEST(TestUCDUtilities, UCDUtilities_Test1Ds)
+TEST(TestUCDUtilities, Test1Ds)
 {
     const std::string exportFolder = "./";
 
@@ -72,7 +72,7 @@ TEST(TestUCDUtilities, UCDUtilities_Test1Ds)
 }
 // ***************************************************************************
 
-TEST(TestUCDUtilities, UCDUtilities_Test1DsTrace)
+TEST(TestUCDUtilities, Test1DsTrace)
 {
     const std::string exportFolder = "./";
 
@@ -109,7 +109,7 @@ TEST(TestUCDUtilities, UCDUtilities_Test1DsTrace)
 
 }
 
-TEST(TestUCDUtilities, UCDUtilities_Test1DsCell)
+TEST(TestUCDUtilities, Test1DsCell)
 {
     const std::string exportFolder = "./";
 
@@ -195,62 +195,6 @@ TEST(TestUCDUtilities, UCDUtilities_Test1DsCell)
                             edges);
 }
 
-// ***************************************************************************
-    /*
-TEST(TestUCDUtilities, UCDUtilities_Test2Ds)
-{
-    const std::string exportFolder = "./";
-
-    Gedim::UCDUtilities exporter;
-
-    Eigen::MatrixXd points(3, 25);
-    points.col(0) << 0.594717, 0.432365, 0.450509;
-    points.col(1) << 0.450525, 0.709432, 0.250734;
-    points.col(2) << 0.446922, 0.706373, 0.261045;
-    points.col(3) << 0.554138, 0.392492, 0.574938;
-    points.col(4) << 0.436999, 0.735424, 0.231993;
-    points.col(5) << 0.679497, 0.515669, 0.190545;
-    points.col(6) << 0.479352, 0.719358, 0.190545;
-    points.col(7) << 0.433893, 0.744516, 0.2229;
-    points.col(8) << 0.422841, 0.77687, 0.190545;
-    points.col(9) << 0.364069, 0.636022, 0.498147;
-    points.col(10) << 0.492678, 0.440621, 0.597042;
-    points.col(11) << 0.54693, 0.385409, 0.597042;
-    points.col(12) << 0.431609, 0.74578, 0.224526;
-    points.col(13) << 0.247976, 0.689657, 0.597042;
-    points.col(14) << 0.241961, 0.821544, 0.404251;
-    points.col(15) << 0.160363, 0.945519, 0.341506;
-    points.col(16) << 0.0770272, 0.863634, 0.597042;
-    points.col(17) << 0.329511, 0.606678, 0.597042;
-    points.col(18) << 0.4272, 0.507259, 0.597042;
-    points.col(19) << 0.352669, 0.626342, 0.530771;
-    points.col(20) << 0.241961, 0.821544, 0.404251;
-    points.col(21) << 0.235293, 0.967739, 0.190545;
-    points.col(22) << 0.209594, 0.993894, 0.190545;
-    points.col(23) << 0.407083, 0.792907, 0.190545;
-    points.col(24) << 0.433893, 0.744516, 0.2229;
-
-    std::vector<std::vector<unsigned int>> polygons_vertices = {{ 0, 1, 2, 3},
-                                                                { 2, 1, 4},
-                                                                { 5, 6, 7, 4, 0},
-                                                                { 7, 6, 8},
-                                                                { 3, 2, 9, 10, 11},
-                                                                { 7, 12, 4},
-                                                                //{ 7, 12, 4},
-                                                                { 13, 14, 15, 16},
-                                                                { 17, 9, 14, 13},
-                                                                { 18, 19, 17},
-                                                                { 10, 9, 19, 18},
-                                                                { 20, 21, 22, 15},
-                                                                { 9, 2, 4, 23, 21, 20},
-                                                                { 23, 12, 24, 8}};
-
-    exporter.ExportPolygons(exportFolder + "Cell2Ds.inp",
-                            points,
-                            polygons_vertices);
-
-}
-*/
 // ***************************************************************************
 
 #endif // __UCD_test_HPP__
