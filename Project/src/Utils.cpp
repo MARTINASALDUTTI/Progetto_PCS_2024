@@ -154,8 +154,8 @@ bool ExportSecondFile(const std::string& outputFileName,
 }
 
 namespace FractureOperations{
-bool fracDistance(Eigen::MatrixXd& FirstFracture,
-                  Eigen::MatrixXd& SecondFracture)
+bool fracDistance(const Eigen::MatrixXd &FirstFracture,
+                  const Eigen::MatrixXd &SecondFracture)
 {
     Eigen::Vector3d firstCenter = FirstFracture.rowwise().sum()/(FirstFracture.cols());
     Eigen::Vector3d secondCenter = SecondFracture.rowwise().sum()/(SecondFracture.cols());
