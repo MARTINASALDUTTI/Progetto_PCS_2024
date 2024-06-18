@@ -7,7 +7,7 @@
 int main()
 {
     constexpr double tol = 10e-10;
-    std::string inputFileName = "./DFN/FR3_data.txt";
+    std::string inputFileName = "./DFN/FR50_data.txt";
     std::string outputFileName = "./DFN/Trace_data.txt";
     std::string outputFileName2 = "./DFN/Trace_for_fracture.txt";
 
@@ -38,8 +38,7 @@ int main()
                 Eigen::Vector3d t = Fractures[i].normals.cross(Fractures[j].normals);
                 if (std::abs(t[0]) < tol && std::abs(t[1]) < tol && std::abs(t[2]) < tol) // checking if the two fractures are parallel
                 {
-                    //bisogna togliere la stampa
-                    std::cout << "parallel" << std::endl;
+
                 }
                 else // else check book case
                 {
