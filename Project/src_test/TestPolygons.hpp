@@ -13,7 +13,7 @@ using namespace testing;
 
 namespace UnitTesting
 {
-    TEST(FractureOperationsTEST, fracDistance)
+    TEST(FractureOperationsTEST, testfracDistance)
     {
         Eigen::MatrixXd A(3,4);
         A << 0.0000000000000000e+00, 1.0000000000000000e+00, 1.0000000000000000e+00, 0.0000000000000000e+00,
@@ -28,7 +28,7 @@ namespace UnitTesting
         EXPECT_TRUE(FractureOperations::fracDistance(A,B));
     }
 
-    TEST(FractureOperationsTEST, computePlane)
+    TEST(FractureOperationsTEST, testcomputePlane)
     {
         Data::Fract TestFract;
         TestFract.FractId = 0;
@@ -45,7 +45,7 @@ namespace UnitTesting
         ASSERT_TRUE(TestFract.d == knownTerm);
     }
 
-    TEST(FractureOperationsTEST, findTraces)
+    TEST(FractureOperationsTEST, testfindTraces)
     {
         Data::Fract TestFract1;
         Data::Fract TestFract2;
@@ -87,7 +87,7 @@ namespace UnitTesting
         ASSERT_TRUE(testTrace.length - 1 <= tol && testTrace.length - 1  >= -tol);
     }
 
-    TEST(FractureOperationsTEST, isTracePassing)
+    TEST(FractureOperationsTEST, testisTracePassing)
     {
         Eigen::MatrixXd fracture(3,4);
         fracture << 0.0000000000000000e+00, 1.0000000000000000e+00, 1.0000000000000000e+00, 0.0000000000000000e+00,
@@ -111,7 +111,7 @@ namespace UnitTesting
         ASSERT_FALSE(FractureOperations::isTracePassing(fracture, SecondtraceStart, SecondtraceEnd));
     }
 
-    TEST(FractureOperationsTEST, isPointInPolygon)
+    TEST(FractureOperationsTEST, testisPointInPolygon)
     {
         Eigen::Vector3d Firstpoint;
         Firstpoint << 0, 0.5, 0;
@@ -129,7 +129,7 @@ namespace UnitTesting
 
     }
 
-    TEST(FractureOperationsTEST, isPointOnEdge)
+    TEST(FractureOperationsTEST, testisPointOnEdge)
     {
         Eigen::Vector3d FirstExtremePoint;
         FirstExtremePoint << 0.8, 0, 0;
@@ -145,7 +145,7 @@ namespace UnitTesting
 
     }
 
-    TEST(FractureOperationsTEST, BookCase)
+    TEST(FractureOperationsTEST, testBookCase)
     {
         Data::Fract FirstFracture;
         Eigen::MatrixXd A(3,4);

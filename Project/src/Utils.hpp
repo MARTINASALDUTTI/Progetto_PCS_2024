@@ -1,5 +1,6 @@
 #pragma once
 
+
 #include "Eigen/Eigen"
 #include <queue>
 
@@ -23,8 +24,8 @@ bool ExportSecondFile(const std::string& outputFileName,
 
 namespace FractureOperations{
 //fracDistance return true if the distance between the centres of two fractures is short enough to contain a trace
-bool fracDistance(Eigen::MatrixXd& FirstFracture,
-                  Eigen::MatrixXd& SecondFracture);
+bool fracDistance(const Eigen::MatrixXd& FirstFracture,
+                  const Eigen::MatrixXd& SecondFracture);
 
 //areParallel return true if the fractures lie on two parallel planes
 void computePlane(Data::Fract& Fracture);
@@ -64,10 +65,6 @@ bool bookCase(const Data::Fract& FirstFracture,
               const Data::Fract& SecondFracture,
               Data::Trace& foundTrace);
 
-/*
-bool isPointInTriangle(const Eigen::Vector3d& point,
-                       const Eigen::MatrixXd& Fracture);
-*/
 }
 
 namespace SortLibrary
