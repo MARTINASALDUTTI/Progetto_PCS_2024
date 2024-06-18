@@ -398,7 +398,6 @@ bool findTraces(const Data::Fract& FirstFracture,
     std::vector<Eigen::VectorXd> CandidatePoints;
     FractureOperations::findPosition(FirstFracture, t, P, CandidatePoints);
     FractureOperations::findPosition(SecondFracture, t, P, CandidatePoints);
-    std::cout << "FRATTURE: " << FirstFracture.FractId << " " << SecondFracture.FractId << " candidate points: \n" << CandidatePoints.size() << std::endl;
 
     std::vector<Eigen::VectorXd> potentialPoints;
     for (unsigned int i = 0; i < CandidatePoints.size(); i++)
@@ -407,7 +406,6 @@ bool findTraces(const Data::Fract& FirstFracture,
             FractureOperations::isPointInPolygon(CandidatePoints[i], SecondFracture.vertices, SecondFracture.normals ))
             potentialPoints.push_back(CandidatePoints[i]);
     }
-    std::cout << " potential points: \n" << potentialPoints.size() << std::endl;
 
     if (potentialPoints.size() != 0)
     {
@@ -419,8 +417,6 @@ bool findTraces(const Data::Fract& FirstFracture,
             if (potentialPoints[i] != potentialPoints[i-1])
                 extremePoints.push_back(potentialPoints[i]);
         }
-        std::cout << " extreme points: \n" << extremePoints.size() << std::endl;
-
 
         foundTrace.FractureIds[0] = FirstFracture.FractId;
         foundTrace.FractureIds[1] = SecondFracture.FractId;

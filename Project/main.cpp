@@ -7,9 +7,9 @@
 int main()
 {
     constexpr double tol = 10e-10;
-    std::string inputFileName = "./DFN/FR10_data.txt";
-    std::string outputFileName = "./DFN/TRACE_data.txt";
-    std::string outputFileName2 = "./DFN/Output2.txt";
+    std::string inputFileName = "./DFN/FR3_data.txt";
+    std::string outputFileName = "./DFN/Trace_data.txt";
+    std::string outputFileName2 = "./DFN/Trace_for_fracture.txt";
 
     /*
      * creo la funzione import data a cui passo  nFracture e Fractures: un dizionario con chiave l'id e valore una struct
