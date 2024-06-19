@@ -535,7 +535,6 @@ bool SolveSystem(const Eigen::Vector3d& Direction,
             Flag = true;
         }
 
-
     return Flag;
 
 }
@@ -546,7 +545,6 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
               std::queue<Data::Fract>& AllSubPolygons)
 {
     Data::Fract CurrentPolygon;
-
     if (AllTraces.size() == 0)
     {
         while(!AllSubPolygons.empty())
@@ -585,7 +583,23 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
                      * Se non trovo questa traccia passo al poligonp suvccessivo
                      * FineRicorsione diventa true
                     */
-                    FineRicorsione = checking(CurrentPolygon, CurrentTrace, AllTraces, traces);
+                    bool TraceOnEdge = false;
+                    FineRicorsione = checking(CurrentPolygon, CurrentTrace, traces, TraceOnEdge);
+                    if (TraceOnEdge)
+                    {
+                        auto punt = it;
+                        it = AllTraces.erase(punt);
+                    }
+                }
+                else if(PolygonalMeshLibrary::IsTraceInSubpolygon(CurrentPolygon, CurrentTrace, AllTraces, traces))
+                {
+                    bool TraceOnEdge = false;
+                    FineRicorsione = checking(CurrentPolygon, CurrentTrace, traces, TraceOnEdge);
+                    if (TraceOnEdge)
+                    {
+                        auto punt = it;
+                        it = AllTraces.erase(punt);
+                    }
                 }
             }
         }
@@ -774,9 +788,12 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
                 secondsubpolygon.vertices = SecondSubPolygon;
                 secondsubpolygon.passingTracesId = CurrentPolygon.passingTracesId;
                 secondsubpolygon.normals = CurrentPolygon.normals;
+
                 //aggiungo alla fine della lista i sottopoligoni da analizzare
                 AllSubPolygons.push(secondsubpolygon);
             }
+
+
 
             //elimino la traccia considerata:
             if (FractureOperations::isPointInPolygon(CurrentTrace.ExtremesCoord[0], CurrentPolygon.vertices, CurrentPolygon.normals) &&
@@ -808,15 +825,20 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
                 if ((CurrentTrace.ExtremesCoord[0] - CurrentTrace.ExtremesCoord[1]).norm() < tol)
                 {
                     AllTraces.remove(CurrentTrace.TraceId);
-
                 }
+            }
+            else
+            {
+                PolygonalMeshLibrary::UpdateTrace(CurrentTrace,
+                                                  AllTraces,
+                                                  traces,
+                                                  estremiTracce);
             }
 
             traces[CurrentTrace.TraceId].length = (CurrentTrace.ExtremesCoord[0] - CurrentTrace.ExtremesCoord[0]).norm();
 
             // Rimuovi il primo sottopoligono analizzato dalla lista
             AllSubPolygons.pop();
-
             //richiamo makecut per ogni sotto pologono
 
             PolygonalMeshLibrary::MakeCuts(AllTraces,
@@ -863,7 +885,6 @@ void CreateMesh(PolygonalMeshLibrary::PolygonalMesh& PolygonMesh)
         PolygonMesh.Vertices_list.remove(*itVertices_list);
         itVertices_list = PolygonMesh.Vertices_list.begin();
     }
-
 
     auto itEdges_list = PolygonMesh.edges_list.begin();
     unsigned int IdCell1d = 0;
@@ -943,8 +964,8 @@ void CreateMesh(PolygonalMeshLibrary::PolygonalMesh& PolygonMesh)
 
 bool checking(const Data::Fract& CurrentPolygon,
               Data::Trace& CurrentTrace,
-              std::list<unsigned int> &AllTraces,
-              std::vector<Data::Trace> &traces)
+              std::vector<Data::Trace> &traces,
+              bool &TraceOnEdge)
 {
     for(unsigned int i = 0; i < CurrentPolygon.vertices.cols(); i++)
     {
@@ -954,10 +975,8 @@ bool checking(const Data::Fract& CurrentPolygon,
             if(FractureOperations::isPointOnEdge(CurrentTrace.ExtremesCoord[0], CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols())) &&
                 FractureOperations::isPointOnEdge(CurrentTrace.ExtremesCoord[1], CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols())) )
             {
-                std::cout << CurrentTrace.ExtremesCoord[0] << std::endl;
-                std::cout << CurrentTrace.ExtremesCoord[1] << std::endl;
-
-                AllTraces.remove(CurrentTrace.TraceId);
+                TraceOnEdge = true;
+                return true;
             }
             else if (FractureOperations::isPointOnEdge(CurrentTrace.ExtremesCoord[0], CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols())))
             {
@@ -979,10 +998,6 @@ bool checking(const Data::Fract& CurrentPolygon,
                         return true;
                     }
                 }
-                else
-                {
-                    return true;
-                }
             }
             else if (FractureOperations::isPointOnEdge(CurrentTrace.ExtremesCoord[1], CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols())))
             {
@@ -996,17 +1011,194 @@ bool checking(const Data::Fract& CurrentPolygon,
                     CurrentTrace.ExtremesCoord[1] = CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols());
                     return true;
                 }
-                else
+            }
+        }
+    }
+    std::cout << " fine ricordione è false" << std::endl;
+    return false;
+}
+
+bool IsTraceInSubpolygon(const Data::Fract& CurrentPolygon,
+                         Data::Trace& CurrentTrace,
+                         std::list<unsigned int> &AllTraces,
+                         std::vector<Data::Trace> &traces)
+{
+    bool PreviousCheck = false;
+    Eigen::Vector3d Direction = CurrentTrace.ExtremesCoord[0] - CurrentTrace.ExtremesCoord[1];
+    Eigen::Vector3d FirstExtreme = CurrentTrace.ExtremesCoord[1];
+    Eigen::Vector3d vertice = CurrentPolygon.vertices.col(CurrentPolygon.vertices.cols() - 1) - FirstExtreme;
+    Eigen::Vector3d CrossProduct = Direction.cross(vertice);
+    if(CrossProduct.dot(CurrentPolygon.normals)> tol )
+        PreviousCheck = true;
+
+    for( unsigned int i = 0; i < CurrentPolygon.vertices.cols(); i++)
+    {
+        bool CurrentCheck = false;
+        Eigen::Vector3d congiungente = CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[1];
+        Eigen::Vector3d v= Direction.cross(congiungente);
+        if (v.dot(CurrentPolygon.normals)>-tol)
+            CurrentCheck = true;
+        if(PreviousCheck != CurrentCheck)
+        {
+            //solve sistem
+            Eigen::Vector3d Solution;
+            if(PolygonalMeshLibrary::SolveSystem(Direction,
+                                                 CurrentPolygon.vertices.col(i),
+                                                 CurrentPolygon.vertices.col((i+1) % CurrentPolygon.vertices.cols()),
+                                                 CurrentTrace.ExtremesCoord[1],
+                                                 Solution))
+            {
+                if(FractureOperations::isPointOnEdge(Solution, CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i+1) % CurrentPolygon.vertices.cols())) &&
+                   FractureOperations::isPointOnEdge(Solution, CurrentTrace.ExtremesCoord[0], CurrentTrace.ExtremesCoord[1]))
                 {
                     return true;
                 }
             }
+            PreviousCheck = CurrentCheck;
+        }
+    }
+
+    for( unsigned int i = 0; i < CurrentPolygon.vertices.cols(); i++)
+    {
+        Eigen::Vector3d edge = CurrentPolygon.vertices.col(i) - CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols());
+        Eigen::Vector3d CrossProduct = Direction.cross(edge);
+        if(CrossProduct.norm() < tol &&
+            FractureOperations::isPointOnEdge(CurrentPolygon.vertices.col(i),
+                                              CurrentTrace.ExtremesCoord[1],
+                                              CurrentTrace.ExtremesCoord[0]))
+        {
+            PolygonalMeshLibrary::updatetrace(CurrentPolygon.vertices.col(i),
+                                              CurrentPolygon.vertices.col((i+1) % CurrentPolygon.vertices.cols()),
+                                              CurrentTrace, AllTraces, traces);
+            return false;
         }
     }
 
     return false;
 }
+
+bool UpdateTrace(Data::Trace& CurrentTrace,
+             std::list<unsigned int>& AllTraces,
+             std::vector<Data::Trace>& traces,
+             std::vector<Eigen::Vector3d> &estremiTracce)
+{
+    AllTraces.remove(CurrentTrace.TraceId);
+    unsigned int max_id = traces.size();
+    if((CurrentTrace.ExtremesCoord[0] - estremiTracce.front()).norm() < (CurrentTrace.ExtremesCoord[0] - estremiTracce.back()).norm())
+    {
+        AllTraces.push_back(max_id);
+        Data::Trace FirstTraces;
+        FirstTraces.TraceId = max_id;
+        FirstTraces.ExtremesCoord[0] = CurrentTrace.ExtremesCoord[0] ;
+        FirstTraces.ExtremesCoord[1] = estremiTracce.front();
+        FirstTraces.length = (FirstTraces.ExtremesCoord[0] - FirstTraces.ExtremesCoord[1]).norm();
+        traces.push_back(FirstTraces);
+    }
+    else
+    {
+        AllTraces.push_back(max_id);
+        Data::Trace FirstTraces;
+        FirstTraces.TraceId = max_id;
+        FirstTraces.ExtremesCoord[0] = CurrentTrace.ExtremesCoord[0] ;
+        FirstTraces.ExtremesCoord[1] = estremiTracce.back();
+        FirstTraces.length = (FirstTraces.ExtremesCoord[0] - FirstTraces.ExtremesCoord[1]).norm();
+        traces.push_back(FirstTraces);
+
+    }
+
+    if((CurrentTrace.ExtremesCoord[1] - estremiTracce.front()).norm() < (CurrentTrace.ExtremesCoord[1] - estremiTracce.back()).norm())
+    {
+        AllTraces.push_back(max_id + 1);
+        Data::Trace SecondTraces;
+        SecondTraces.TraceId = max_id + 1;
+        SecondTraces.ExtremesCoord[1] = CurrentTrace.ExtremesCoord[1] ;
+        SecondTraces.ExtremesCoord[0] = estremiTracce.front();
+        SecondTraces.length = (SecondTraces.ExtremesCoord[0] - SecondTraces.ExtremesCoord[1]).norm();
+        traces.push_back(SecondTraces);
+    }
+    else
+    {
+        AllTraces.push_back(max_id + 1);
+        Data::Trace SecondTraces;
+        SecondTraces.TraceId = max_id + 1;
+        SecondTraces.ExtremesCoord[1] = CurrentTrace.ExtremesCoord[1] ;
+        SecondTraces.ExtremesCoord[0] = estremiTracce.back();
+        SecondTraces.length = (SecondTraces.ExtremesCoord[0] - SecondTraces.ExtremesCoord[1]).norm();
+        traces.push_back(SecondTraces);
+    }
+    return true;
 }
 
+
+bool updatetrace(const Eigen::Vector3d V1,
+                 const Eigen::Vector3d V2,
+                 Data::Trace& CurrentTrace,
+                 std::list<unsigned int>& AllTraces,
+                 std::vector<Data::Trace>& traces)
+{
+    AllTraces.remove(CurrentTrace.TraceId);
+
+    if((CurrentTrace.ExtremesCoord[0] - V1).norm() < (CurrentTrace.ExtremesCoord[0] - V2).norm())
+    {
+        unsigned int max_id = traces.size();
+        Data::Trace FirstTraces;
+        FirstTraces.TraceId = max_id;
+        FirstTraces.ExtremesCoord[0] = CurrentTrace.ExtremesCoord[0] ;
+        FirstTraces.ExtremesCoord[1] = V1;
+        FirstTraces.length = (FirstTraces.ExtremesCoord[0] - FirstTraces.ExtremesCoord[1]).norm();
+        if(FirstTraces.length < CurrentTrace.length && FirstTraces.length > tol)
+        {
+            AllTraces.push_back(max_id);
+            traces.push_back(FirstTraces);
+        }
+    }
+    else
+    {
+        unsigned int max_id = traces.size();
+        Data::Trace FirstTraces;
+        FirstTraces.TraceId = max_id;
+        FirstTraces.ExtremesCoord[0] = CurrentTrace.ExtremesCoord[0] ;
+        FirstTraces.ExtremesCoord[1] = V2;
+        FirstTraces.length = (FirstTraces.ExtremesCoord[0] - FirstTraces.ExtremesCoord[1]).norm();
+        if(FirstTraces.length < CurrentTrace.length && FirstTraces.length > tol)
+        {
+            AllTraces.push_back(max_id);
+            traces.push_back(FirstTraces);
+        }
+    }
+
+    if((CurrentTrace.ExtremesCoord[1] - V1).norm() < (CurrentTrace.ExtremesCoord[0] - V2).norm())
+    {
+        unsigned int max_id = traces.size();
+        Data::Trace SecondTraces;
+        SecondTraces.TraceId = max_id;
+        SecondTraces.ExtremesCoord[1] = CurrentTrace.ExtremesCoord[1] ;
+        SecondTraces.ExtremesCoord[0] = V1;
+        SecondTraces.length = (SecondTraces.ExtremesCoord[0] - SecondTraces.ExtremesCoord[1]).norm();
+        if(SecondTraces.length < CurrentTrace.length && SecondTraces.length > tol)
+        {
+            AllTraces.push_back(max_id);
+            traces.push_back(SecondTraces);
+        }
+    }
+    else
+    {
+        unsigned int max_id = traces.size();
+
+        Data::Trace SecondTraces;
+        SecondTraces.TraceId = max_id;
+        SecondTraces.ExtremesCoord[1] = CurrentTrace.ExtremesCoord[1] ;
+        SecondTraces.ExtremesCoord[0] = V2;
+        SecondTraces.length = (SecondTraces.ExtremesCoord[0] - SecondTraces.ExtremesCoord[1]).norm();
+
+        if(SecondTraces.length < CurrentTrace.length && SecondTraces.length > tol)
+        {
+            AllTraces.push_back(max_id);
+            traces.push_back(SecondTraces);
+        }
+    }
+    return true;
+}
+}
 
 
