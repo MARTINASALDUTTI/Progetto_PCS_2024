@@ -106,7 +106,6 @@ void SavingSubpolygon(const Data::Fract& CurrentPolygon,
 
 bool checking(const Data::Fract& CurrentPolygon,
               Data::Trace& CurrentTrace,
-              std::vector<Data::Trace>& traces,
               bool& TraceOnEdge);
 
 bool IsTraceInSubpolygon(const Data::Fract& CurrentPolygon,

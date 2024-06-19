@@ -584,7 +584,7 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
                      * FineRicorsione diventa true
                     */
                     bool TraceOnEdge = false;
-                    FineRicorsione = checking(CurrentPolygon, CurrentTrace, traces, TraceOnEdge);
+                    FineRicorsione = checking(CurrentPolygon, CurrentTrace, TraceOnEdge);
                     if (TraceOnEdge)
                     {
                         auto punt = it;
@@ -594,7 +594,7 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
                 else if(PolygonalMeshLibrary::IsTraceInSubpolygon(CurrentPolygon, CurrentTrace, AllTraces, traces))
                 {
                     bool TraceOnEdge = false;
-                    FineRicorsione = checking(CurrentPolygon, CurrentTrace, traces, TraceOnEdge);
+                    FineRicorsione = checking(CurrentPolygon, CurrentTrace, TraceOnEdge);
                     if (TraceOnEdge)
                     {
                         auto punt = it;
@@ -603,6 +603,8 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
                 }
             }
         }
+
+        std::cout << CurrentTrace.TraceId << std::endl;
 
         if(FineRicorsione == true)
         {
@@ -885,6 +887,7 @@ void CreateMesh(PolygonalMeshLibrary::PolygonalMesh& PolygonMesh)
         PolygonMesh.Vertices_list.remove(*itVertices_list);
         itVertices_list = PolygonMesh.Vertices_list.begin();
     }
+    std::cout << "IdCell0d " << IdCell0d <<std::endl;
 
     auto itEdges_list = PolygonMesh.edges_list.begin();
     unsigned int IdCell1d = 0;
@@ -912,6 +915,7 @@ void CreateMesh(PolygonalMeshLibrary::PolygonalMesh& PolygonMesh)
 
         itEdges_list = PolygonMesh.edges_list.begin();
     }
+    std::cout << "IdCell1d " << IdCell1d <<std::endl;
 
     unsigned int IdCell2d = 0;
 
@@ -964,7 +968,6 @@ void CreateMesh(PolygonalMeshLibrary::PolygonalMesh& PolygonMesh)
 
 bool checking(const Data::Fract& CurrentPolygon,
               Data::Trace& CurrentTrace,
-              std::vector<Data::Trace> &traces,
               bool &TraceOnEdge)
 {
     for(unsigned int i = 0; i < CurrentPolygon.vertices.cols(); i++)
@@ -980,23 +983,17 @@ bool checking(const Data::Fract& CurrentPolygon,
             }
             else if (FractureOperations::isPointOnEdge(CurrentTrace.ExtremesCoord[0], CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols())))
             {
+
                 if((CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[1]).norm() < (CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentTrace.ExtremesCoord[1]).norm())
                 {
-                    if ((CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[1]).norm() > tol &&
-                        (CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[1]).norm() < traces[CurrentTrace.TraceId].length)
-                    {
-                        CurrentTrace.ExtremesCoord[0] = CurrentPolygon.vertices.col(i);
-                        return true;
-                    }
+                    CurrentTrace.ExtremesCoord[0] = CurrentPolygon.vertices.col(i);
+                    return true;
+
                 }
                 else if((CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[1]).norm() > (CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentTrace.ExtremesCoord[1]).norm())
                 {
-                    if ((CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentTrace.ExtremesCoord[1]).norm() > tol &&
-                        (CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentTrace.ExtremesCoord[1]).norm() < traces[CurrentTrace.TraceId].length)
-                    {
-                        CurrentTrace.ExtremesCoord[0] = CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols());
-                        return true;
-                    }
+                    CurrentTrace.ExtremesCoord[0] = CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols());
+                    return true;
                 }
             }
             else if (FractureOperations::isPointOnEdge(CurrentTrace.ExtremesCoord[1], CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols())))
@@ -1014,7 +1011,6 @@ bool checking(const Data::Fract& CurrentPolygon,
             }
         }
     }
-    std::cout << " fine ricordione è false" << std::endl;
     return false;
 }
 
@@ -1146,7 +1142,7 @@ bool updatetrace(const Eigen::Vector3d V1,
         FirstTraces.ExtremesCoord[0] = CurrentTrace.ExtremesCoord[0] ;
         FirstTraces.ExtremesCoord[1] = V1;
         FirstTraces.length = (FirstTraces.ExtremesCoord[0] - FirstTraces.ExtremesCoord[1]).norm();
-        if(FirstTraces.length < CurrentTrace.length && FirstTraces.length > tol)
+        if(FirstTraces.length > tol)
         {
             AllTraces.push_back(max_id);
             traces.push_back(FirstTraces);
@@ -1160,7 +1156,7 @@ bool updatetrace(const Eigen::Vector3d V1,
         FirstTraces.ExtremesCoord[0] = CurrentTrace.ExtremesCoord[0] ;
         FirstTraces.ExtremesCoord[1] = V2;
         FirstTraces.length = (FirstTraces.ExtremesCoord[0] - FirstTraces.ExtremesCoord[1]).norm();
-        if(FirstTraces.length < CurrentTrace.length && FirstTraces.length > tol)
+        if(FirstTraces.length > tol)
         {
             AllTraces.push_back(max_id);
             traces.push_back(FirstTraces);
@@ -1175,7 +1171,7 @@ bool updatetrace(const Eigen::Vector3d V1,
         SecondTraces.ExtremesCoord[1] = CurrentTrace.ExtremesCoord[1] ;
         SecondTraces.ExtremesCoord[0] = V1;
         SecondTraces.length = (SecondTraces.ExtremesCoord[0] - SecondTraces.ExtremesCoord[1]).norm();
-        if(SecondTraces.length < CurrentTrace.length && SecondTraces.length > tol)
+        if(SecondTraces.length > tol)
         {
             AllTraces.push_back(max_id);
             traces.push_back(SecondTraces);
@@ -1191,7 +1187,7 @@ bool updatetrace(const Eigen::Vector3d V1,
         SecondTraces.ExtremesCoord[0] = V2;
         SecondTraces.length = (SecondTraces.ExtremesCoord[0] - SecondTraces.ExtremesCoord[1]).norm();
 
-        if(SecondTraces.length < CurrentTrace.length && SecondTraces.length > tol)
+        if(SecondTraces.length > tol)
         {
             AllTraces.push_back(max_id);
             traces.push_back(SecondTraces);

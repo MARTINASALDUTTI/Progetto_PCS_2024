@@ -10,7 +10,7 @@ TEST(TestUCDUtilities, Test0Ds)
     const std::string exportFolder = "./";
 
 
-    Eigen::MatrixXd points(3, 26);
+    Eigen::MatrixXd points(3, 25);
     points.col(0) << 0.594717, 0.432365, 0.450509;
     points.col(1) << 0.450525, 0.709432, 0.250734;
     points.col(2) << 0.446922, 0.706373, 0.261045;
@@ -23,20 +23,19 @@ TEST(TestUCDUtilities, Test0Ds)
     points.col(9) << 0.364069, 0.636022, 0.498147;
     points.col(10) << 0.492678, 0.440621, 0.597042;
     points.col(11) << 0.54693, 0.385409, 0.597042;
-    points.col(12) << 0.431609, 0.74578, 0.224526;
-    points.col(13) << 0.247976, 0.689657, 0.597042;
-    points.col(14) << 0.241961, 0.821544, 0.404251;
-    points.col(15) << 0.160363, 0.945519, 0.341506;
-    points.col(16) << 0.0770272, 0.863634, 0.597042;
-    points.col(17) << 0.329511, 0.606678, 0.597042;
-    points.col(18) << 0.4272, 0.507259, 0.597042;
-    points.col(19) << 0.352669, 0.626342, 0.530771;
-    points.col(20) << 0.241961, 0.821544, 0.404251;
-    points.col(21) << 0.235293, 0.967739, 0.190545;
-    points.col(22) << 0.209594, 0.993894, 0.190545;
-    points.col(23) << 0.407083, 0.792907, 0.190545;
-    points.col(24) << 0.433893, 0.744516, 0.2229;
-    points.col(25) << 0.240595, 0.851491, 0.360475;
+    points.col(12) << 0.407083, 0.792907, 0.190545;
+    points.col(13) << 0.431609, 0.74578, 0.224526;
+    points.col(14) << 0.247976, 0.689657, 0.597042;
+    points.col(15) << 0.241961, 0.821544, 0.404251;
+    points.col(16) << 0.160363, 0.945519, 0.341506;
+    points.col(17) << 0.0770272, 0.863634, 0.597042;
+    points.col(18) << 0.329511, 0.606678, 0.597042;
+    points.col(19) << 0.4272, 0.507259, 0.597042;
+    points.col(20) << 0.3526369, 0.626342, 0.530771;
+    points.col(21) << 0.241961, 0.821544, 0.404251;
+    points.col(22) << 0.235293, 0.967739, 0.190545;
+    points.col(23) << 0.209594, 0.993894, 0.190545;
+    points.col(24) << 0.240595, 0.851491, 0.360475;
 
 
     Gedim::UCDUtilities exporter;
@@ -115,7 +114,7 @@ TEST(TestUCDUtilities, Test1DsCell)
 
     Gedim::UCDUtilities exporter;
 
-    Eigen::MatrixXd points(3, 26);
+    Eigen::MatrixXd points(3, 25);
     points.col(0) << 0.594717, 0.432365, 0.450509;
     points.col(1) << 0.450525, 0.709432, 0.250734;
     points.col(2) << 0.446922, 0.706373, 0.261045;
@@ -128,22 +127,21 @@ TEST(TestUCDUtilities, Test1DsCell)
     points.col(9) << 0.364069, 0.636022, 0.498147;
     points.col(10) << 0.492678, 0.440621, 0.597042;
     points.col(11) << 0.54693, 0.385409, 0.597042;
-    points.col(12) << 0.431609, 0.74578, 0.224526;
-    points.col(13) << 0.247976, 0.689657, 0.597042;
-    points.col(14) << 0.241961, 0.821544, 0.404251;
-    points.col(15) << 0.160363, 0.945519, 0.341506;
-    points.col(16) << 0.0770272, 0.863634, 0.597042;
-    points.col(17) << 0.329511, 0.606678, 0.597042;
-    points.col(18) << 0.4272, 0.507259, 0.597042;
-    points.col(19) << 0.352669, 0.626342, 0.530771;
-    points.col(20) << 0.241961, 0.821544, 0.404251;
-    points.col(21) << 0.235293, 0.967739, 0.190545;
-    points.col(22) << 0.209594, 0.993894, 0.190545;
-    points.col(23) << 0.407083, 0.792907, 0.190545;
-    points.col(24) << 0.433893, 0.744516, 0.2229;
-    points.col(25) << 0.240595, 0.851491, 0.360475;
+    points.col(12) << 0.407083, 0.792907, 0.190545;
+    points.col(13) << 0.431609, 0.74578, 0.224526;
+    points.col(14) << 0.247976, 0.689657, 0.597042;
+    points.col(15) << 0.241961, 0.821544, 0.404251;
+    points.col(16) << 0.160363, 0.945519, 0.341506;
+    points.col(17) << 0.0770272, 0.863634, 0.597042;
+    points.col(18) << 0.329511, 0.606678, 0.597042;
+    points.col(19) << 0.4272, 0.507259, 0.597042;
+    points.col(20) << 0.3526369, 0.626342, 0.530771;
+    points.col(21) << 0.241961, 0.821544, 0.404251;
+    points.col(22) << 0.235293, 0.967739, 0.190545;
+    points.col(23) << 0.209594, 0.993894, 0.190545;
+    points.col(24) << 0.240595, 0.851491, 0.360475;
 
-    Eigen::MatrixXi edges(2, 44);
+    Eigen::MatrixXi edges(2, 42);
 
     edges.col(0) << 0, 1;
     edges.col(1) << 1, 2;
@@ -162,33 +160,32 @@ TEST(TestUCDUtilities, Test1DsCell)
     edges.col(14) << 9, 10;
     edges.col(15) << 10, 11;
     edges.col(16) << 11, 3;
-    edges.col(17) << 7, 12;
-    edges.col(18) << 12, 4;
-    edges.col(19) << 13, 14;
-    edges.col(20) << 14, 15;
-    edges.col(21) << 15, 16;
-    edges.col(22) << 16, 13;
-    edges.col(23) << 17, 9;
-    edges.col(24) << 9, 14;
-    edges.col(25) << 13, 17;
-    edges.col(26) << 18, 19;
-    edges.col(27) << 19, 17;
-    edges.col(28) << 17, 18;
-    edges.col(29) << 9, 19;
-    edges.col(30) << 18, 10;
-    edges.col(31) << 20, 21;
-    edges.col(32) << 21, 22;
-    edges.col(33) << 22, 15;
-    edges.col(34) << 15, 20;
-    edges.col(35) << 12, 23;
-    edges.col(36) << 24, 12;
-    edges.col(37) << 8, 24;
-    edges.col(38) << 23, 8;
-    edges.col(39) << 12, 25;
-    edges.col(40) << 20, 25;
-    edges.col(41) << 9, 20;
-    edges.col(42) << 23, 21;
-    edges.col(43) << 25, 21;
+    edges.col(17) << 13, 12;
+    edges.col(18) << 13, 7;
+    edges.col(19) << 8, 12;
+    edges.col(20) << 13, 4;
+    edges.col(21) << 14, 15;
+    edges.col(22) << 16, 15;
+    edges.col(23) << 17, 16;
+    edges.col(24) << 17, 14;
+    edges.col(25) << 18, 9;
+    edges.col(26) << 15, 9;
+    edges.col(27) << 14, 18;
+    edges.col(28) << 19, 20;
+    edges.col(29) << 20, 18;
+    edges.col(30) << 18, 19;
+    edges.col(31) << 9, 20;
+    edges.col(32) << 19, 10;
+    edges.col(33) << 21, 22;
+    edges.col(34) << 22, 23;
+    edges.col(35) << 16, 23;
+    edges.col(36) << 21, 16;
+    edges.col(37) << 13, 24;
+    edges.col(38) << 24, 21;
+    edges.col(39) << 21, 9;
+    edges.col(40) << 12, 22;
+    edges.col(41) << 22, 24;
+
 
     exporter.ExportSegments(exportFolder + "Cell1Ds.inp",
                             points,
