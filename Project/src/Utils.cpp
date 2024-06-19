@@ -604,8 +604,6 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
             }
         }
 
-        std::cout << CurrentTrace.TraceId << std::endl;
-
         if(FineRicorsione == true)
         {
             // bisogna salvare il sotto poligono e uscire dalla funzione
@@ -887,7 +885,6 @@ void CreateMesh(PolygonalMeshLibrary::PolygonalMesh& PolygonMesh)
         PolygonMesh.Vertices_list.remove(*itVertices_list);
         itVertices_list = PolygonMesh.Vertices_list.begin();
     }
-    std::cout << "IdCell0d " << IdCell0d <<std::endl;
 
     auto itEdges_list = PolygonMesh.edges_list.begin();
     unsigned int IdCell1d = 0;
@@ -915,7 +912,6 @@ void CreateMesh(PolygonalMeshLibrary::PolygonalMesh& PolygonMesh)
 
         itEdges_list = PolygonMesh.edges_list.begin();
     }
-    std::cout << "IdCell1d " << IdCell1d <<std::endl;
 
     unsigned int IdCell2d = 0;
 

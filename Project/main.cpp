@@ -7,7 +7,7 @@
 int main()
 {
     constexpr double tol = 10e-10;
-    std::string inputFileName = "./DFN/FR50_data.txt";
+    std::string inputFileName = "./DFN/FR10_data.txt";
     std::string outputFileName = "./DFN/Trace_data.txt";
     std::string outputFileName2 = "./DFN/Trace_for_fracture.txt";
 
@@ -123,7 +123,6 @@ int main()
             AllTraces.insert(AllTraces.end(), Fractures[i].notPassingTracesId.begin(), Fractures[i].notPassingTracesId.end());
             std::queue<Data::Fract> AllSubPolygons;
             AllSubPolygons.push(Fractures[i]);
-            std::cout << "frattura numero " << i << std::endl;
             PolygonalMeshLibrary::MakeCuts(AllTraces,
                                            TracesCopy,
                                            PolygonalMesh,
@@ -137,8 +136,5 @@ int main()
 
         Meshes.push_back(PolygonalMesh);
     }
-
-
-
     return 0;
 }
