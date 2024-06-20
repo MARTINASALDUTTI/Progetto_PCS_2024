@@ -202,7 +202,6 @@ void computePlane(Data::Fract& Fracture)
     Fracture.normals = (vector1.cross(vector2)).normalized();
 
     Fracture.d = Fracture.normals.dot(Fracture.vertices.col(0));
-
 }
 
 
@@ -213,33 +212,34 @@ void findPosition(const Data::Fract& Fracture,
 {
     double tol = 1e-10;
     bool previous = false;
-    if (t.dot(Fracture.vertices.col(0)-P)>=- tol)
+    if (t.dot(Fracture.vertices.col(0) - P) >=  tol)
         previous = true;
 
     for (unsigned int i = 0; i < Fracture.vertices.cols(); i++)
     {
         bool current = false;
-        if (t.dot(Fracture.vertices.col(i)-P)>= - tol)
+        if (t.dot(Fracture.vertices.col((i + 1) % Fracture.vertices.cols())-P)>=  tol)
             current = true;
 
         if(current != previous )
         {
             //if cosines have opposite sign, we have to solve the sistem
             Eigen::Vector3d V1 = Fracture.vertices.col(i);
-            Eigen::Vector3d V2 = Fracture.vertices.col((i - 1) % Fracture.vertices.cols()); //-1%N = N-1 where N is a natural number
-            Eigen::Vector3d intersetion;
-            if (FractureOperations::findExtreme(V1, V2,t, P, intersetion))
+            Eigen::Vector3d V2 = Fracture.vertices.col((i + 1) % Fracture.vertices.cols());
+
+            Eigen::Vector3d intersection;
+            if (FractureOperations::findExtreme(V1, V2,t, P, intersection))
             {
-                CandidatePoints.push_back(intersetion);
+                CandidatePoints.push_back(intersection);
             }
         }
-
-        if (((t.dot(Fracture.vertices.col(i)-P)>= -tol)|| (t.dot(Fracture.vertices.col(i)-P)<= tol)) &&
-            ((t.dot(Fracture.vertices.col((i - 1) % Fracture.vertices.cols())-P)>= -tol)||
-             (t.dot(Fracture.vertices.col((i - 1) % Fracture.vertices.cols())-P))<= tol))
+        if (((t.dot(Fracture.vertices.col((i + 1) % Fracture.vertices.cols())-P)>= -tol)||
+             (t.dot(Fracture.vertices.col((i + 1) % Fracture.vertices.cols())-P)<= tol)) &&
+            ((t.dot(Fracture.vertices.col(i)-P)>= -tol)||
+             (t.dot(Fracture.vertices.col(i)-P))<= tol))
         {
             Eigen::Vector3d V1 = Fracture.vertices.col(i);
-            Eigen::Vector3d V2 = Fracture.vertices.col((i - 1) % Fracture.vertices.cols());
+            Eigen::Vector3d V2 = Fracture.vertices.col((i + 1) % Fracture.vertices.cols());
             Eigen::Vector3d intersetion;
             if (FractureOperations::findExtreme(V1, V2,t, P, intersetion))
             {
@@ -261,19 +261,14 @@ bool findExtreme(const Eigen::Vector3d& V1,
     A.col(0) = t;
     A.col(1) = V1 - V2;
 
-    Eigen::Vector3d b;
-    b.row(0) << V1[0]-P[0];
-    b.row(1) << V1[1]-P[1];
-    b.row(2) << V1[2]-P[2];
+    Eigen::Vector3d b = V1 - P;
 
     Eigen::Vector2d paramVert = A.colPivHouseholderQr().solve(b);
     Eigen::Vector3d Candidate1= V1 + paramVert[1]*(V2-V1);
     Eigen::Vector3d Candidate2 = P + paramVert[0]* t;
     //intersection of the line t and V1-V2
 
-    if ( ((Candidate1 - Candidate2)[0] < tol && (Candidate1 - Candidate2)[0] > -tol) &&
-        ((Candidate1 - Candidate2)[1] < tol && (Candidate1 - Candidate2)[1] > -tol) &&
-        ((Candidate1 - Candidate2)[2] < tol && (Candidate1 - Candidate2)[2] > -tol))
+    if ( ((Candidate1 - Candidate2).squaredNorm() < tol))
     {
         intersection = Candidate1;
         return true;
@@ -283,15 +278,16 @@ bool findExtreme(const Eigen::Vector3d& V1,
 }
 
 bool isPointInPolygon(const Eigen::Vector3d& point,
-                         const Eigen::MatrixXd& Polygon,
-                         const Eigen::Vector3d& normal)
+                      const Eigen::MatrixXd& Polygon,
+                      const Eigen::Vector3d& normal)
 {
     bool PointInPolygon = true;
-    for(unsigned int i = 0; i < Polygon.cols(); i++)
+    for(unsigned int j = 0; j < Polygon.cols(); j++)
     {
-        Eigen::Vector3d vector1 = Polygon.col((i+1) % Polygon.cols()) - Polygon.col(i);
-        Eigen::Vector3d vector2 = point - Polygon.col(i);
+        Eigen::Vector3d vector1 = Polygon.col((j+1) % Polygon.cols()) - Polygon.col(j);
+        Eigen::Vector3d vector2 = point - Polygon.col(j);
         Eigen::Vector3d CrossProduct = vector1.cross(vector2);
+
         if(CrossProduct.dot(normal) < -tol )
             return !PointInPolygon;
     }
@@ -334,17 +330,28 @@ bool bookCase(const Data::Fract& FirstFracture,
               const Data::Fract& SecondFracture,
               Data::Trace& foundTrace)
 {
+    std::cout << " book case " << std::endl;
     bool check = false;
     std::vector<Eigen::Vector3d> candidatePoints;
     for (unsigned int i = 0; i < FirstFracture.vertices.cols(); i++)
     {
-        if(isPointInPolygon(FirstFracture.vertices.col(i), SecondFracture.vertices, SecondFracture.normals))
-            candidatePoints.push_back(FirstFracture.vertices.col(i));
+        for(unsigned int j = 0; j < SecondFracture.vertices.cols(); j++)
+        {
+            if(isPointOnEdge(FirstFracture.vertices.col(i), SecondFracture.vertices.col(j), SecondFracture.vertices.col((j + 1) % SecondFracture.vertices.cols())))
+            {
+                candidatePoints.push_back(FirstFracture.vertices.col(i));
+            }
+        }
     }
     for (unsigned int i = 0; i < SecondFracture.vertices.cols(); i++)
     {
-        if(isPointInPolygon(SecondFracture.vertices.col(i), FirstFracture.vertices, FirstFracture.normals))
-            candidatePoints.push_back(SecondFracture.vertices.col(i));
+        for(unsigned int j = 0; j < FirstFracture.vertices.cols(); j++)
+        {
+            if(isPointOnEdge(SecondFracture.vertices.col(i), FirstFracture.vertices.col(j), FirstFracture.vertices.col((j + 1) % FirstFracture.vertices.cols())))
+            {
+                candidatePoints.push_back(SecondFracture.vertices.col(i));
+            }
+        }
     }
     if (candidatePoints.size() != 0)
     {
@@ -399,14 +406,28 @@ bool findTraces(const Data::Fract& FirstFracture,
     FractureOperations::findPosition(FirstFracture, t, P, CandidatePoints);
     FractureOperations::findPosition(SecondFracture, t, P, CandidatePoints);
 
-    std::vector<Eigen::VectorXd> potentialPoints;
+    //std::cout <<" CandidatePoints.size() " << CandidatePoints.size() << std::endl;
+
+    std::vector<Eigen::Vector3d> potentialPoints;
+
+    /*
+    for(auto& elem : CandidatePoints)
+        std::cout << elem.transpose() << std::endl;
+        */
     for (unsigned int i = 0; i < CandidatePoints.size(); i++)
     {
         if (FractureOperations::isPointInPolygon(CandidatePoints[i], FirstFracture.vertices,FirstFracture.normals ) &&
             FractureOperations::isPointInPolygon(CandidatePoints[i], SecondFracture.vertices, SecondFracture.normals ))
+        {
             potentialPoints.push_back(CandidatePoints[i]);
+        }
     }
 
+    //std::cout <<" potentialPoints.size() " << potentialPoints.size() << std::endl;
+    /*
+    for(auto& elem : potentialPoints)
+        std::cout << elem.transpose() << std::endl;
+    */
     if (potentialPoints.size() != 0)
     {
         std::vector<Eigen::VectorXd> extremePoints;

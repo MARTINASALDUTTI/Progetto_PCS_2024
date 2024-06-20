@@ -7,7 +7,7 @@
 int main()
 {
     constexpr double tol = 10e-10;
-    std::string inputFileName = "./DFN/FR10_data.txt";
+    std::string inputFileName = "./DFN/FR200_data.txt";
     std::string outputFileName = "./DFN/Trace_data.txt";
     std::string outputFileName2 = "./DFN/Trace_for_fracture.txt";
 
@@ -36,15 +36,12 @@ int main()
             if (FractureOperations::fracDistance(Fractures[i].vertices, Fractures[j].vertices))
             {
                 Eigen::Vector3d t = Fractures[i].normals.cross(Fractures[j].normals);
-                if (std::abs(t[0]) < tol && std::abs(t[1]) < tol && std::abs(t[2]) < tol) // checking if the two fractures are parallel
-                {
 
-                }
-                else // else check book case
+                if (t.squaredNorm() > tol)
                 {
                     Data::Trace foundTrace;
                     if (FractureOperations::findTraces(Fractures[i], Fractures[j], t, foundTrace))
-                    {                        
+                    {
                         foundTrace.TraceId = (count)++;
                         traces_list.push_back(foundTrace);
                         if (foundTrace.Tips[0] == false)
@@ -55,28 +52,27 @@ int main()
                             Fractures[j].passingTracesId.push_back(foundTrace.TraceId);
                         else
                             Fractures[j].notPassingTracesId.push_back(foundTrace.TraceId);
-
                     }
-
                 }
-            }
-            else if (Fractures[i].normals == Fractures[j].normals && Fractures[i].d == Fractures[j].d ) // BOOK CASE
-            {
-                Data::Trace foundTrace;
-                if (FractureOperations::bookCase(Fractures[i], Fractures[j], foundTrace))
+                else if (t.squaredNorm() < tol) // BOOK CASE
                 {
-                    foundTrace.TraceId = (count)++;
-                    traces_list.push_back(foundTrace);
-                    if (foundTrace.Tips[0] == false)
-                        Fractures[i].notPassingTracesId.push_back(foundTrace.TraceId);
-                    else
-                        Fractures[i].passingTracesId.push_back(foundTrace.TraceId);
-                    if (foundTrace.Tips[1] == false)
-                        Fractures[j].notPassingTracesId.push_back(foundTrace.TraceId);
-                    else
-                        Fractures[j].passingTracesId.push_back(foundTrace.TraceId);
+                    Data::Trace foundTrace;
+                    if (FractureOperations::bookCase(Fractures[i], Fractures[j], foundTrace))
+                    {
+                        foundTrace.TraceId = (count)++;
+                        traces_list.push_back(foundTrace);
+                        if (foundTrace.Tips[0] == false)
+                            Fractures[i].notPassingTracesId.push_back(foundTrace.TraceId);
+                        else
+                            Fractures[i].passingTracesId.push_back(foundTrace.TraceId);
+                        if (foundTrace.Tips[1] == false)
+                            Fractures[j].notPassingTracesId.push_back(foundTrace.TraceId);
+                        else
+                            Fractures[j].passingTracesId.push_back(foundTrace.TraceId);
+                    }
                 }
             }
+
         }
     }
 
