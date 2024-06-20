@@ -159,39 +159,32 @@ bool fracDistance(const Eigen::MatrixXd &FirstFracture,
 {
     Eigen::Vector3d firstCenter = FirstFracture.rowwise().sum()/(FirstFracture.cols());
     Eigen::Vector3d secondCenter = SecondFracture.rowwise().sum()/(SecondFracture.cols());
-    double majorDistance1 = 0;
+    double majorDistance1 = 0 ;
     double majorDistance2 = 0;
+
 
     //vedere se fare una funzione
     for (unsigned int j = 0; j < FirstFracture.cols(); j++)
     {
-        double  distanceVC = 0;
-        for (unsigned int i = 0; i < 3; i++)
-        {
-            distanceVC += ((FirstFracture(i,j)- firstCenter(i)) * (FirstFracture(i,j)- firstCenter(i)));
-        }
+        double distanceVC = (firstCenter - FirstFracture.col(j)).squaredNorm() ;
         if (distanceVC > majorDistance1)
             majorDistance1 = distanceVC;
     }
 
     for (unsigned int j = 0; j < SecondFracture.cols(); j++)
     {
-        double  distanceVC = 0;
-        for (unsigned int i = 0; i < 3; i++)
-        {
-            distanceVC += ((SecondFracture(i,j)- secondCenter(i)) * (SecondFracture(i,j)- secondCenter(i)));
-        }
+        double distanceVC = (secondCenter - SecondFracture.col(j)).squaredNorm() ;
         if (distanceVC > majorDistance2)
             majorDistance2 = distanceVC;
     }
 
-    double centerDistance = 0;
-    for (unsigned int i = 0; i < 3; i++)
-        centerDistance += (firstCenter(i) - secondCenter(i)) * (firstCenter(i) - secondCenter(i));
-    if (centerDistance > majorDistance1 + majorDistance2)
-        return false;
-    else
+    double majorDistance = std::max(majorDistance1, majorDistance2);
+    double centerDistance = (firstCenter - secondCenter).squaredNorm();
+
+    if (centerDistance < 4*majorDistance)
         return true;
+
+    return false;
 }
 
 void computePlane(Data::Fract& Fracture)
@@ -584,6 +577,8 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
         else
         {
             CurrentPolygon = AllSubPolygons.front();
+            //std::cout << "CurrentPolygon" << std::endl;
+            //std::cout << CurrentPolygon.vertices << std::endl;
         }
 
         //devo selezionare la traccia più lunga fra quelle del sottopoligono
@@ -624,6 +619,8 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
                 }
             }
         }
+
+        //std::cout << "traccia " << CurrentTrace.TraceId << " " << FineRicorsione << std::endl;
 
         if(FineRicorsione == true)
         {
@@ -716,6 +713,7 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
                                            PolygonMesh,
                                            AllSubPolygons);
             }
+
         }
         else
         {
@@ -814,8 +812,6 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
                 AllSubPolygons.push(secondsubpolygon);
             }
 
-
-
             //elimino la traccia considerata:
             if (FractureOperations::isPointInPolygon(CurrentTrace.ExtremesCoord[0], CurrentPolygon.vertices, CurrentPolygon.normals) &&
                 FractureOperations::isPointInPolygon(CurrentTrace.ExtremesCoord[1], CurrentPolygon.vertices, CurrentPolygon.normals))
@@ -888,7 +884,6 @@ void SavingSubpolygon(const Data::Fract& CurrentPolygon,
         PolygonMesh.edges_list.push_back(edge);
         std::array<Eigen::Vector3d, 2> edgeContr = {CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()), CurrentPolygon.vertices.col(i)};
         PolygonMesh.edges_list.push_back(edgeContr);
-
     }
 
     PolygonMesh.subpolygons_list.push_back(CurrentPolygon.vertices);
@@ -1005,7 +1000,6 @@ bool checking(const Data::Fract& CurrentPolygon,
                 {
                     CurrentTrace.ExtremesCoord[0] = CurrentPolygon.vertices.col(i);
                     return true;
-
                 }
                 else if((CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[1]).norm() > (CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentTrace.ExtremesCoord[1]).norm())
                 {
@@ -1067,8 +1061,8 @@ bool IsTraceInSubpolygon(const Data::Fract& CurrentPolygon,
                     return true;
                 }
             }
-            PreviousCheck = CurrentCheck;
         }
+        PreviousCheck = CurrentCheck;
     }
 
     for( unsigned int i = 0; i < CurrentPolygon.vertices.cols(); i++)
@@ -1099,46 +1093,58 @@ bool UpdateTrace(Data::Trace& CurrentTrace,
     unsigned int max_id = traces.size();
     if((CurrentTrace.ExtremesCoord[0] - estremiTracce.front()).norm() < (CurrentTrace.ExtremesCoord[0] - estremiTracce.back()).norm())
     {
-        AllTraces.push_back(max_id);
         Data::Trace FirstTraces;
         FirstTraces.TraceId = max_id;
         FirstTraces.ExtremesCoord[0] = CurrentTrace.ExtremesCoord[0] ;
         FirstTraces.ExtremesCoord[1] = estremiTracce.front();
         FirstTraces.length = (FirstTraces.ExtremesCoord[0] - FirstTraces.ExtremesCoord[1]).norm();
-        traces.push_back(FirstTraces);
+        if(FirstTraces.length > tol)
+        {
+            AllTraces.push_back(max_id);
+            traces.push_back(FirstTraces);
+        }
     }
     else
     {
-        AllTraces.push_back(max_id);
         Data::Trace FirstTraces;
         FirstTraces.TraceId = max_id;
         FirstTraces.ExtremesCoord[0] = CurrentTrace.ExtremesCoord[0] ;
         FirstTraces.ExtremesCoord[1] = estremiTracce.back();
         FirstTraces.length = (FirstTraces.ExtremesCoord[0] - FirstTraces.ExtremesCoord[1]).norm();
-        traces.push_back(FirstTraces);
-
+        if(FirstTraces.length > tol)
+        {
+            AllTraces.push_back(max_id);
+            traces.push_back(FirstTraces);
+        }
     }
 
     if((CurrentTrace.ExtremesCoord[1] - estremiTracce.front()).norm() < (CurrentTrace.ExtremesCoord[1] - estremiTracce.back()).norm())
     {
-        AllTraces.push_back(max_id + 1);
         Data::Trace SecondTraces;
         SecondTraces.TraceId = max_id + 1;
         SecondTraces.ExtremesCoord[1] = CurrentTrace.ExtremesCoord[1] ;
         SecondTraces.ExtremesCoord[0] = estremiTracce.front();
         SecondTraces.length = (SecondTraces.ExtremesCoord[0] - SecondTraces.ExtremesCoord[1]).norm();
-        traces.push_back(SecondTraces);
+        if(SecondTraces.length > tol)
+        {
+            AllTraces.push_back(max_id + 1);
+            traces.push_back(SecondTraces);
+        }
     }
     else
     {
-        AllTraces.push_back(max_id + 1);
         Data::Trace SecondTraces;
         SecondTraces.TraceId = max_id + 1;
         SecondTraces.ExtremesCoord[1] = CurrentTrace.ExtremesCoord[1] ;
         SecondTraces.ExtremesCoord[0] = estremiTracce.back();
         SecondTraces.length = (SecondTraces.ExtremesCoord[0] - SecondTraces.ExtremesCoord[1]).norm();
-        traces.push_back(SecondTraces);
+        if(SecondTraces.length > tol)
+        {
+            AllTraces.push_back(max_id + 1);
+            traces.push_back(SecondTraces);
+        }
     }
+    //std::cout << CurrentTrace.TraceId << " aggiotnata " << std::endl;
     return true;
 }
 
@@ -1149,6 +1155,7 @@ bool updatetrace(const Eigen::Vector3d V1,
                  std::list<unsigned int>& AllTraces,
                  std::vector<Data::Trace>& traces)
 {
+    std::cout << "updatetraceupdatetrace" << std::endl;
     AllTraces.remove(CurrentTrace.TraceId);
 
     if((CurrentTrace.ExtremesCoord[0] - V1).norm() < (CurrentTrace.ExtremesCoord[0] - V2).norm())
