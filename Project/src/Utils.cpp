@@ -326,6 +326,7 @@ bool bookCase(const Data::Fract& FirstFracture,
 {
     bool check = false;
     std::vector<Eigen::Vector3d> candidatePoints;
+    candidatePoints.reserve(12);
     for (unsigned int i = 0; i < FirstFracture.vertices.cols(); i++)
     {
         for(unsigned int j = 0; j < SecondFracture.vertices.cols(); j++)
@@ -349,6 +350,7 @@ bool bookCase(const Data::Fract& FirstFracture,
     if (candidatePoints.size() != 0)
     {
         std::vector<Eigen::VectorXd> extremePoints;
+        extremePoints.reserve(4);
         extremePoints.push_back(candidatePoints[0]);
 
         for (unsigned int i = 1; i < candidatePoints.size(); i++)
@@ -396,13 +398,14 @@ bool findTraces(const Data::Fract& FirstFracture,
 
     Eigen::Vector3d P = A.colPivHouseholderQr().solve(b);
     std::vector<Eigen::VectorXd> CandidatePoints;
+    CandidatePoints.reserve(4);
     FractureOperations::findPosition(FirstFracture, t, P, CandidatePoints);
     FractureOperations::findPosition(SecondFracture, t, P, CandidatePoints);
 
-    //std::cout <<" CandidatePoints.size() " << CandidatePoints.size() << std::endl;
+    std::cout <<" CandidatePoints.size() " << CandidatePoints.size() << std::endl;
 
     std::vector<Eigen::Vector3d> potentialPoints;
-
+    potentialPoints.reserve(2);
     for (unsigned int i = 0; i < CandidatePoints.size(); i++)
     {
         if (FractureOperations::isPointInPolygon(CandidatePoints[i], FirstFracture.vertices,FirstFracture.normals ) &&
@@ -415,6 +418,7 @@ bool findTraces(const Data::Fract& FirstFracture,
     if (potentialPoints.size() != 0)
     {
         std::vector<Eigen::VectorXd> extremePoints;
+        extremePoints.reserve(2);
         extremePoints.push_back(potentialPoints[0]);
 
         for (unsigned int i = 1; i < potentialPoints.size(); i++)
