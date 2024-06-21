@@ -102,6 +102,9 @@ std::queue<Data::Fract>&)
 + void CreateMesh(PolygonalMeshLibrary::PolygonalMesh&)
 + void SavingSubpolygon(const Data::Fract&, PolygonalMeshLibrary::PolygonalMesh&)
 + bool checking(const Data::Fract&, Data::Trace&, std::list<unsigned int>&, std::vector<Data::Trace>&)
++ bool IsTraceInSubpolygon(const Data::Fract&, Data::Trace&, std::list<unsigned int>&, std::vector<Data::Trace>&)
++ bool UpdateTrace(Data::Trace&, std::list<unsigned int>&, std::vector<Data::Trace>&, std::vector<Eigen::Vector3d>&)
++ bool CalculateArea(const Eigen::MatrixXd&)
 
 ..PolygonalMeshLibraryTEST..
 Test0Ds
