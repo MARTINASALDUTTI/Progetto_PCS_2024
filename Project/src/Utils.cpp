@@ -534,7 +534,7 @@ bool SolveSystem(const Eigen::Vector3d& Direction,
     Eigen::Vector3d Candidate1= vertice1 + paramVert[1]*(vertice2-vertice1);
     Eigen::Vector3d Candidate2 = point + paramVert[0]* Direction;
 
-    if ( ((Candidate1 - Candidate2).norm() < tol))
+    if ( ((Candidate1 - Candidate2).squaredNorm() < tol))
         {
             Solution = Candidate1;
             Flag = true;
@@ -792,26 +792,26 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
             }
             else if (FractureOperations::isPointInPolygon(CurrentTrace.ExtremesCoord[0], CurrentPolygon.vertices, CurrentPolygon.normals))
             {
-                if((CurrentTrace.ExtremesCoord[1] - estremiTracce.back()).norm() < (CurrentTrace.ExtremesCoord[1] - estremiTracce.front()).norm() )
+                if((CurrentTrace.ExtremesCoord[1] - estremiTracce.back()).squaredNorm() < (CurrentTrace.ExtremesCoord[1] - estremiTracce.front()).squaredNorm() )
                     traces[CurrentTrace.TraceId].ExtremesCoord[0] = estremiTracce.back();
                 else
                     traces[CurrentTrace.TraceId].ExtremesCoord[0] = estremiTracce.front();
 
-                if ((CurrentTrace.ExtremesCoord[0] - CurrentTrace.ExtremesCoord[1]).norm() < tol)
+                if ((CurrentTrace.ExtremesCoord[0] - CurrentTrace.ExtremesCoord[1]).squaredNorm() < tol)
                 {
                     AllTraces.remove(CurrentTrace.TraceId);
                 }
             }
             else if (FractureOperations::isPointInPolygon(CurrentTrace.ExtremesCoord[1], CurrentPolygon.vertices, CurrentPolygon.normals))
             {
-                if((CurrentTrace.ExtremesCoord[0] - estremiTracce.back()).norm() < (CurrentTrace.ExtremesCoord[0] - estremiTracce.front()).norm() )
+                if((CurrentTrace.ExtremesCoord[0] - estremiTracce.back()).squaredNorm() < (CurrentTrace.ExtremesCoord[0] - estremiTracce.front()).squaredNorm() )
                 {
                     traces[CurrentTrace.TraceId].ExtremesCoord[1] = estremiTracce.back();
                 }
                 else
                     traces[CurrentTrace.TraceId].ExtremesCoord[1] = estremiTracce.front();
 
-                if ((CurrentTrace.ExtremesCoord[0] - CurrentTrace.ExtremesCoord[1]).norm() < tol)
+                if ((CurrentTrace.ExtremesCoord[0] - CurrentTrace.ExtremesCoord[1]).squaredNorm() < tol)
                 {
                     AllTraces.remove(CurrentTrace.TraceId);
                 }
@@ -956,8 +956,8 @@ bool checking(const Data::Fract& CurrentPolygon,
 {
     for(unsigned int i = 0; i < CurrentPolygon.vertices.cols(); i++)
     {
-        if((CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[0]).norm() < tol ||
-            (CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[1]).norm() < tol)
+        if((CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[0]).squaredNorm() < tol ||
+            (CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[1]).squaredNorm() < tol)
         {
             if(FractureOperations::isPointOnEdge(CurrentTrace.ExtremesCoord[0], CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols())) &&
                 FractureOperations::isPointOnEdge(CurrentTrace.ExtremesCoord[1], CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols())) )
@@ -968,12 +968,12 @@ bool checking(const Data::Fract& CurrentPolygon,
             else if (FractureOperations::isPointOnEdge(CurrentTrace.ExtremesCoord[0], CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols())))
             {
 
-                if((CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[1]).norm() < (CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentTrace.ExtremesCoord[1]).norm())
+                if((CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[1]).squaredNorm() < (CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentTrace.ExtremesCoord[1]).squaredNorm())
                 {
                     CurrentTrace.ExtremesCoord[0] = CurrentPolygon.vertices.col(i);
                     return true;
                 }
-                else if((CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[1]).norm() > (CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentTrace.ExtremesCoord[1]).norm())
+                else if((CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[1]).squaredNorm() > (CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentTrace.ExtremesCoord[1]).squaredNorm())
                 {
                     CurrentTrace.ExtremesCoord[0] = CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols());
                     return true;
@@ -981,12 +981,12 @@ bool checking(const Data::Fract& CurrentPolygon,
             }
             else if (FractureOperations::isPointOnEdge(CurrentTrace.ExtremesCoord[1], CurrentPolygon.vertices.col(i), CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols())))
             {
-                if((CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[0]).norm() < (CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentTrace.ExtremesCoord[0]).norm())
+                if((CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[0]).squaredNorm() < (CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentTrace.ExtremesCoord[0]).squaredNorm())
                 {
                     CurrentTrace.ExtremesCoord[1] = CurrentPolygon.vertices.col(i);
                     return true;
                 }
-                else if((CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[0]).norm() > (CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentTrace.ExtremesCoord[0]).norm())
+                else if((CurrentPolygon.vertices.col(i) - CurrentTrace.ExtremesCoord[0]).squaredNorm() > (CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols()) - CurrentTrace.ExtremesCoord[0]).squaredNorm())
                 {
                     CurrentTrace.ExtremesCoord[1] = CurrentPolygon.vertices.col((i + 1) % CurrentPolygon.vertices.cols());
                     return true;
@@ -1046,7 +1046,7 @@ bool UpdateTrace(Data::Trace& CurrentTrace,
 {
     AllTraces.remove(CurrentTrace.TraceId);
     unsigned int max_id = traces.size();
-    if((CurrentTrace.ExtremesCoord[0] - estremiTracce.front()).norm() < (CurrentTrace.ExtremesCoord[0] - estremiTracce.back()).norm())
+    if((CurrentTrace.ExtremesCoord[0] - estremiTracce.front()).squaredNorm() < (CurrentTrace.ExtremesCoord[0] - estremiTracce.back()).squaredNorm())
     {
         Data::Trace FirstTraces;
         FirstTraces.TraceId = max_id;
@@ -1073,7 +1073,7 @@ bool UpdateTrace(Data::Trace& CurrentTrace,
         }
     }
 
-    if((CurrentTrace.ExtremesCoord[1] - estremiTracce.front()).norm() < (CurrentTrace.ExtremesCoord[1] - estremiTracce.back()).norm())
+    if((CurrentTrace.ExtremesCoord[1] - estremiTracce.front()).squaredNorm() < (CurrentTrace.ExtremesCoord[1] - estremiTracce.back()).squaredNorm())
     {
         Data::Trace SecondTraces;
         SecondTraces.TraceId = max_id + 1;
