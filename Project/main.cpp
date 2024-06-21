@@ -133,33 +133,8 @@ int main()
         PolygonalMesh.Num2DsCell = PolygonalMesh.Cell2DsVertices.size();
 
         Meshes.push_back(PolygonalMesh);
-
-        /*
-        for (const auto& pair : PolygonalMesh.coord0DsCellMap) {
-            unsigned int key = pair.first;
-            Eigen::Vector3d value = pair.second;
-
-            std::cout << "Chiave: " << key << " Valore: ("
-                      << value.transpose() << ")" << std::endl;
-        }
-
-        for (const auto& pair : PolygonalMesh.Cell1DMap) {
-            unsigned int key = pair.first;
-            std::array<unsigned int, 2> value = pair.second;
-
-            std::cout << "Chiave: " << key << " Valore: ("
-                      << value[0] << ", "
-                      << value[1] << ")" << std::endl;
-        }
-        */
     }
 
     return 0;
-
-
-
-
-
-
 
 }

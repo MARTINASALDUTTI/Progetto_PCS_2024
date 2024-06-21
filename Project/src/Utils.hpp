@@ -118,12 +118,6 @@ bool UpdateTrace(Data::Trace& CurrentTrace,
              std::vector<Data::Trace>& traces,
              std::vector<Eigen::Vector3d>& estremiTracce);
 
-bool updatetrace(const Eigen::Vector3d V1,
-                 const Eigen::Vector3d V2,
-                 Data::Trace& CurrentTrace,
-                 std::list<unsigned int>& AllTraces,
-                 std::vector<Data::Trace>& traces);
-
 bool CalculateArea(const Eigen::MatrixXd& Cell);
 }
 
