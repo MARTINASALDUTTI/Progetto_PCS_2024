@@ -402,8 +402,6 @@ bool findTraces(const Data::Fract& FirstFracture,
     FractureOperations::findPosition(FirstFracture, t, P, CandidatePoints);
     FractureOperations::findPosition(SecondFracture, t, P, CandidatePoints);
 
-    std::cout <<" CandidatePoints.size() " << CandidatePoints.size() << std::endl;
-
     std::vector<Eigen::Vector3d> potentialPoints;
     potentialPoints.reserve(2);
     for (unsigned int i = 0; i < CandidatePoints.size(); i++)
