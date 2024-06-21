@@ -119,7 +119,6 @@ int main()
             AllTraces.insert(AllTraces.end(), Fractures[i].notPassingTracesId.begin(), Fractures[i].notPassingTracesId.end());
             std::queue<Data::Fract> AllSubPolygons;
             AllSubPolygons.push(Fractures[i]);
-            std::cout << "fratture " << i << " " << std::endl;
 
             PolygonalMeshLibrary::MakeCuts(AllTraces,
                                            TracesCopy,
