@@ -4,6 +4,7 @@
 #include <limits>
 #include "Eigen/Eigen"
 #include <algorithm>
+#include <iomanip>
 
 #include "Utils.hpp"
 #include "PolygonalMesh.hpp"
@@ -323,7 +324,6 @@ bool bookCase(const Data::Fract& FirstFracture,
               const Data::Fract& SecondFracture,
               Data::Trace& foundTrace)
 {
-    std::cout << " book case " << std::endl;
     bool check = false;
     std::vector<Eigen::Vector3d> candidatePoints;
     for (unsigned int i = 0; i < FirstFracture.vertices.cols(); i++)
@@ -403,10 +403,6 @@ bool findTraces(const Data::Fract& FirstFracture,
 
     std::vector<Eigen::Vector3d> potentialPoints;
 
-    /*
-    for(auto& elem : CandidatePoints)
-        std::cout << elem.transpose() << std::endl;
-        */
     for (unsigned int i = 0; i < CandidatePoints.size(); i++)
     {
         if (FractureOperations::isPointInPolygon(CandidatePoints[i], FirstFracture.vertices,FirstFracture.normals ) &&
@@ -416,11 +412,6 @@ bool findTraces(const Data::Fract& FirstFracture,
         }
     }
 
-    //std::cout <<" potentialPoints.size() " << potentialPoints.size() << std::endl;
-    /*
-    for(auto& elem : potentialPoints)
-        std::cout << elem.transpose() << std::endl;
-    */
     if (potentialPoints.size() != 0)
     {
         std::vector<Eigen::VectorXd> extremePoints;
@@ -626,7 +617,8 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
         {
             // bisogna salvare il sotto poligono e uscire dalla funzione
             PolygonalMeshLibrary::SavingSubpolygon(CurrentPolygon,
-                                                   PolygonMesh);
+                                                       PolygonMesh);
+
             // Rimuovi il primo sottopoligono analizzato dalla lista
             AllSubPolygons.pop();
 
@@ -740,7 +732,7 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
             {
                 Eigen::Vector3d congiungente = CurrentPolygon.vertices.col(j) - FirstExtreme;
                 Eigen::Vector3d v= Direction.cross(congiungente);
-                if (v.dot(CurrentPolygon.normals)>tol)
+                if (v.dot(CurrentPolygon.normals)> tol)
                 {
                     FirstSide.push_back(CurrentPolygon.vertices.col(j));
                     //se la normale è parallela sta da un lato
@@ -752,7 +744,7 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
             v= Direction.cross(congiungente);
 
             unsigned int k = 0;
-            while (v.dot(CurrentPolygon.normals) < - tol )
+            while (v.dot(CurrentPolygon.normals) < -tol )
             {
                 SecondSide.push_back(CurrentPolygon.vertices.col(k++));
                 congiungente = CurrentPolygon.vertices.col(k) - FirstExtreme;
@@ -766,52 +758,74 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
             {
                 Eigen::Vector3d congiungente = CurrentPolygon.vertices.col(j) - FirstExtreme;
                 Eigen::Vector3d v= Direction.cross(congiungente);
-                if (v.dot(CurrentPolygon.normals)< - tol)
+                if (v.dot(CurrentPolygon.normals)< -tol)
                 {
                     SecondSide.push_back(CurrentPolygon.vertices.col(j));
                     //se la normale è parallela sta da un lato
                 }
             }
 
-            //se uno dei due poligoni è degenere, vuol dire la traccia è su un lato => l'altro poligono coincide con
-            //current polygon pertanto non lo salvo
-            if(FirstSide.size() > 2)
+            //copio std::vector in Eigen::Matrix
+            Eigen::MatrixXd SubPolygon(3,FirstSide.size());
+
+            for(unsigned int k = 0; k < FirstSide.size(); k++)
             {
-                //copio std::vector in Eigen::Matrix
-                Eigen::MatrixXd SubPolygon(3,FirstSide.size());
-
-                for(unsigned int k = 0; k < FirstSide.size(); k++)
-                {
-                    SubPolygon.col(k) = FirstSide[k];
-                }
-
+                SubPolygon.col(k) = FirstSide[k];
+            }
+            if(PolygonalMeshLibrary::CalculateArea(SubPolygon))
+            {
                 Data::Fract subpolygon;
                 subpolygon.vertices = SubPolygon;
-                subpolygon.passingTracesId = CurrentPolygon.passingTracesId;
+                //subpolygon.passingTracesId = CurrentPolygon.passingTracesId;
                 subpolygon.normals = CurrentPolygon.normals;
                 //aggiungo alla fine della lista i sottopoligoni da analizzare
                 AllSubPolygons.push(subpolygon);
             }
-
-            if(SecondSide.size() > 2)
+            /*
+            else
             {
-                //copio std::vector in Eigen::Matrix
-                Eigen::MatrixXd SecondSubPolygon(3,SecondSide.size());
+                std::cout << CurrentPolygon.vertices << std::endl;
 
-                for(unsigned int k = 0; k < SecondSide.size(); k++)
-                {
-                    SecondSubPolygon.col(k) = SecondSide[k];
-                }
+                std::cout << "qualcosa 1" << std::endl;
+                std::cerr << CurrentTrace.TraceId << std::endl;
+                std::cout << CurrentTrace.ExtremesCoord[0].transpose() << " " << CurrentTrace.ExtremesCoord[1].transpose() << std::endl;
+                std::cout << SubPolygon << std::endl;
 
+            }
+*/
+
+            //copio std::vector in Eigen::Matrix
+            Eigen::MatrixXd SecondSubPolygon(3,SecondSide.size());
+
+            for(unsigned int k = 0; k < SecondSide.size(); k++)
+            {
+                SecondSubPolygon.col(k) = SecondSide[k];
+            }
+            //std::cout << "SecondSubPolygon" << std::endl;
+            //std::cout << SecondSubPolygon << std::endl;
+
+            if(PolygonalMeshLibrary::CalculateArea(SecondSubPolygon))
+            {
                 Data::Fract secondsubpolygon;
                 secondsubpolygon.vertices = SecondSubPolygon;
-                secondsubpolygon.passingTracesId = CurrentPolygon.passingTracesId;
+                //secondsubpolygon.passingTracesId = CurrentPolygon.passingTracesId;
                 secondsubpolygon.normals = CurrentPolygon.normals;
 
                 //aggiungo alla fine della lista i sottopoligoni da analizzare
                 AllSubPolygons.push(secondsubpolygon);
             }
+            /*
+            else
+            {
+                std::cout << "qualcosa 1" << std::endl;
+                std::cerr << CurrentTrace.TraceId << std::endl;
+                std::cout << CurrentTrace.ExtremesCoord[0].transpose() << " " << CurrentTrace.ExtremesCoord[1].transpose() << std::endl;
+                std::cout << CurrentPolygon.vertices << std::endl;
+                std::cout << SecondSubPolygon<< std::endl;
+                std::cout << SubPolygon << std::endl;
 
+            }
+            */
             //elimino la traccia considerata:
             if (FractureOperations::isPointInPolygon(CurrentTrace.ExtremesCoord[0], CurrentPolygon.vertices, CurrentPolygon.normals) &&
                 FractureOperations::isPointInPolygon(CurrentTrace.ExtremesCoord[1], CurrentPolygon.vertices, CurrentPolygon.normals))
@@ -854,10 +868,10 @@ bool MakeCuts(std::list<unsigned int>& AllTraces,
 
             traces[CurrentTrace.TraceId].length = (CurrentTrace.ExtremesCoord[0] - CurrentTrace.ExtremesCoord[0]).norm();
 
-            // Rimuovi il primo sottopoligono analizzato dalla lista
+            // Rimuovi il sottopoligono analizzato dalla lista
             AllSubPolygons.pop();
-            //richiamo makecut per ogni sotto pologono
 
+            //richiamo makecut per ogni sotto pologono
             PolygonalMeshLibrary::MakeCuts(AllTraces,
                                            traces,
                                            PolygonMesh,
@@ -901,6 +915,7 @@ void CreateMesh(PolygonalMeshLibrary::PolygonalMesh& PolygonMesh)
         PolygonMesh.Vertices_list.remove(*itVertices_list);
         itVertices_list = PolygonMesh.Vertices_list.begin();
     }
+    std::cout << "IdCell0d" << IdCell0d <<std::endl;
 
     auto itEdges_list = PolygonMesh.edges_list.begin();
     unsigned int IdCell1d = 0;
@@ -928,6 +943,8 @@ void CreateMesh(PolygonalMeshLibrary::PolygonalMesh& PolygonMesh)
 
         itEdges_list = PolygonMesh.edges_list.begin();
     }
+    std::cout << "IdCell1d" << IdCell1d <<std::endl;
+
 
     unsigned int IdCell2d = 0;
 
@@ -975,7 +992,10 @@ void CreateMesh(PolygonalMeshLibrary::PolygonalMesh& PolygonMesh)
         PolygonMesh.Cell2DsVertices.insert({IdCell2d, Cell2DsVertices_vector});
         PolygonMesh.Cell2DsEdges.insert({IdCell2d, Cell2DsEdges_vector});
         IdCell2d++;
+
     }
+    std::cout << "IdCell2d " << IdCell2d <<std::endl;
+
 }
 
 bool checking(const Data::Fract& CurrentPolygon,
@@ -1144,7 +1164,7 @@ bool UpdateTrace(Data::Trace& CurrentTrace,
             traces.push_back(SecondTraces);
         }
     }
-    //std::cout << CurrentTrace.TraceId << " aggiotnata " << std::endl;
+
     return true;
 }
 
@@ -1218,6 +1238,28 @@ bool updatetrace(const Eigen::Vector3d V1,
         }
     }
     return true;
+}
+
+bool CalculateArea(const Eigen::MatrixXd& Cell)
+{
+    double SquaredArea = 0;
+    Eigen::Vector3d refPointCoordinates = Cell.col(0);
+
+    for(unsigned int i = 1; i < Cell.cols() - 1; i++)
+    {
+        Eigen::Vector3d firstEdge = Cell.col(i) - refPointCoordinates;
+        Eigen::Vector3d secondEdge = Cell.col(i+1) - refPointCoordinates;
+
+        double PartialArea = 0.25 * (firstEdge.cross(secondEdge)).squaredNorm();
+        SquaredArea += PartialArea;
+    }
+
+    if (SquaredArea > std::pow(tol, 4))
+    {
+        return true;
+    }
+
+    return false;
 }
 }
 

@@ -7,7 +7,7 @@
 int main()
 {
     constexpr double tol = 10e-10;
-    std::string inputFileName = "./DFN/FR200_data.txt";
+    std::string inputFileName = "./DFN/FR50_data.txt";
     std::string outputFileName = "./DFN/Trace_data.txt";
     std::string outputFileName2 = "./DFN/Trace_for_fracture.txt";
 
@@ -133,8 +133,30 @@ int main()
         PolygonalMesh.Num2DsCell = PolygonalMesh.Cell2DsVertices.size();
 
         Meshes.push_back(PolygonalMesh);
+
+        /*
+        for (const auto& pair : PolygonalMesh.coord0DsCellMap) {
+            unsigned int key = pair.first;
+            Eigen::Vector3d value = pair.second;
+
+            std::cout << "Chiave: " << key << " Valore: ("
+                      << value.transpose() << ")" << std::endl;
+        }
+
+        for (const auto& pair : PolygonalMesh.Cell1DMap) {
+            unsigned int key = pair.first;
+            std::array<unsigned int, 2> value = pair.second;
+
+            std::cout << "Chiave: " << key << " Valore: ("
+                      << value[0] << ", "
+                      << value[1] << ")" << std::endl;
+        }
+        */
     }
+
     return 0;
+
+
 
 
 
