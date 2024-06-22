@@ -83,7 +83,7 @@ int main()
         Traces.push_back(trace);
     }
 
-    if (!Data::ExportData(outputFileName, Traces))
+    if (!Data::ExportFirstFile(outputFileName, Traces))
     {
         std::cerr<< "error: export failed"<< std::endl;
         return -2;

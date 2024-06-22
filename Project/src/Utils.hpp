@@ -14,7 +14,7 @@ bool ImportData(const std::string& inputFileName,
                 unsigned int& nFracture,
                 std::vector<Data::Fract>& Fractures);
 
-bool ExportData(const std::string& outputFileName,
+bool ExportFirstFile(const std::string& outputFileName,
                 const std::vector<Data::Trace>& Traces);
 
 bool ExportSecondFile(const std::string& outputFileName,

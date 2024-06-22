@@ -81,7 +81,7 @@ bool ImportData(const std::string& inputFileName,
     return true;
 }
 
-bool ExportData(const std::string& outputFileName,
+bool ExportFirstFile(const std::string& outputFileName,
                 const std::vector<Data::Trace>& Traces)
 {
     std::ofstream outFile(outputFileName);

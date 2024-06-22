@@ -11,7 +11,7 @@ class Fract
 .. Data function..
 
 + bool ImportData(const std::string&, unsigned int&, std::vector<Data::Fract>&)
-+ bool ExportData(const std::string&, const std::vector<Data::Trace>&)
++ bool ExportFirstFile(const std::string&, const std::vector<Data::Trace>&)
 + bool ExportSecondFile(const std::string&, std::vector<Data::Fract>&, const std::vector<Data::Trace>&)
 }
 
