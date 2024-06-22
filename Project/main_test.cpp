@@ -1,4 +1,10 @@
-int main()
+#include "TestPolygons.hpp"
+#include "UCD_test.hpp"
+
+#include <gtest/gtest.h>
+
+int main(int argc, char *argv[])
 {
-    return 0;
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }

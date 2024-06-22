@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.9)
 
-project(ProjectName LANGUAGES CXX C VERSION 1.0.0)
+project(ProjectDFN LANGUAGES CXX C VERSION 1.0.0)
 
 # Set C++ Standard
 ################################################################################

@@ -1,1 +1,119 @@
-https://github.com/MARTINASALDUTTI/Esercitazione_6_Sorting
+@startuml
+package Data <<Folder>>{
+
+class Fract
+{
++ FractId: unsigned int 
++ vertices: Eigen::MatrixXd
++ normals: Eigen::Vector3d
++ passingTracesId: vector<unsigned int>
++ notPassingTracesId: vector<unsigned int>
+.. Data function..
+
++ bool ImportData(const std::string&, unsigned int&, std::vector<Data::Fract>&)
++ bool ExportFirstFile(const std::string&, const std::vector<Data::Trace>&)
++ bool ExportSecondFile(const std::string&, std::vector<Data::Fract>&, const std::vector<Data::Trace>&)
+}
+
+class Trace
+{
++ TraceId: unsigned int
++ FracturesIds: std::array<unsigned int, 2>
++ ExtremesCoord: std::array<Eigen::Vector3d, 2>
++ Tips: std::array<bool,2>
++ length: double
+}
+
+
+}
+
+package Gedim <<Frame>>{
+}
+note "External library" as GedimN
+GedimN..Gedim
+
+Gedim ..> PolygonalMeshLibrary::gedimInterface 
+
+'Trace "2"--o "many" Fracture : has
+
+
+package FractureOperations <<Folder>>{
+class FractureOperations_functions {
++ bool fracDistance(const Eigen::MatrixXd&, const Eigen::MatrixXd&)
++ void computePlane(Data::Fract&)
++ bool findTraces(const Data::Fract&, const Data::Fract&, const Eigen::Vector3d&, Data::Trace&)
++void findPosition(const Data::Fract&, const Eigen::Vector3d&, const Eigen::Vector3d&, std::vector<Eigen::VectorXd>&)
++ bool findExtreme(const Eigen::Vector3d&, const Eigen::Vector3d&, const Eigen::Vector3d&, const Eigen::Vector3d&, Eigen::Vector3d&)
++ bool isPointInPolygon(const Eigen::Vector3d&, const Eigen::MatrixXd&, const Eigen::Vector3d&)
++ bool isPointOnEdge(const Eigen::Vector3d&, const Eigen::Vector3d&, const Eigen::Vector3d&)
++ bool isTracePassing(const Eigen::MatrixXd&, const Eigen::Vector3d&, const Eigen::Vector3d&)
++ bool bookCase(const Data::Fract&, const Data::Fract&, Data::Trace&);
+
+
+..FractureOperationsTEST..
+testfracDistance
+testcomputePlane
+testfindTraces
+testisTracePassing
+testisPointInPolygon
+testisPointOnEdge
+testBookCase
+}
+FractureOperations_functions ..> Fract
+FractureOperations_functions ..> Trace
+FractureOperations_functions ..> PolygonalMeshLibrary
+}
+note "Functions with operations on Geometry" as FractureOperationsN
+FractureOperationsN.. FractureOperations_functions
+
+package SortLibrary <<Folder>>{
+class SortLibrary_functions {
++ void merge(std::vector<unsigned int>&, const std::vector<Data::Trace>&, size_t, size_t, size_t)
++ void mergesort(std::vector<unsigned int>&, const std::vector<Data::Trace>&, size_t, size_t)
++ void Mergesort(std::vector<unsigned int>& data, const std::vector<Data::Trace>& traces)
+..  SortLibraryTEST..
+testMergeSort
+
+}
+SortLibrary_functions..> Trace
+}
+note "Functions to sort" as SortLibraryN
+SortLibraryN.. SortLibrary_functions
+
+package PolygonalMeshLibrary <<Folder>>{
+class PolygonalMesh{
++ Num0DsCell: unsigned int
++ Vertices_list: std::list<Eigen::Vector3d>
++ coord0DsCellMap: std::unordered_map<unsigned int, Eigen::Vector3d>
+
++ Num1DsCell: unsigned int
++ edges_list: std::list<std::array<Eigen::Vector3d, 2>>
++ Cell1DMap: std::unordered_map<unsigned int, std::array<unsigned int, 2>>
+
++ Num2DsCell: unsigned int
++ subpolygons_list: std::list<Eigen::MatrixXd>
++ Cell2DsVertices: std::unordered_map<unsigned int, std::vector<unsigned int>>
++ Cell2DsEdges: std::unordered_map<unsigned int, std::vector<unsigned int>>
+
+.. PolygonalMeshLibrary_functions ..
++ bool MakeCuts(std::list<unsigned int>&, std::vector<Data::Trace>&, PolygonalMeshLibrary::PolygonalMesh&, 
+std::queue<Data::Fract>&)
++ bool SolveSystem(const Eigen::Vector3d&, const Eigen::Vector3d&, const Eigen::Vector3d&, const Eigen::Vector3d&, Eigen::Vector3d&)
++ void CreateMesh(PolygonalMeshLibrary::PolygonalMesh&)
++ void SavingSubpolygon(const Data::Fract&, PolygonalMeshLibrary::PolygonalMesh&)
++ bool checking(const Data::Fract&, Data::Trace&, std::list<unsigned int>&, std::vector<Data::Trace>&)
++ bool IsTraceInSubpolygon(const Data::Fract&, Data::Trace&, std::list<unsigned int>&, std::vector<Data::Trace>&)
++ bool UpdateTrace(Data::Trace&, std::list<unsigned int>&, std::vector<Data::Trace>&, std::vector<Eigen::Vector3d>&)
++ bool CalculateArea(const Eigen::MatrixXd&)
+
+..PolygonalMeshLibraryTEST..
+Test0Ds
+Test1Ds
+Test1DsTrace
+Test1DsCell
+}
+}
+
+'PolygonalMeshLibrary "1"--o "1" 
+
+@enduml
