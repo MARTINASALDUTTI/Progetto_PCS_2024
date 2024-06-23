@@ -181,8 +181,8 @@ TEST(TestUCDUtilities, Test1DsCell)
     edges.col(37) << 15, 23;
     edges.col(38) << 12, 21;
     edges.col(39) << 21, 23;
-    //edges.col(40) << 12, 22;
-    //edges.col(41) << 22, 24;
+    edges.col(40) << 12, 22;
+    edges.col(41) << 22, 24;
 
 
     exporter.ExportSegments(exportFolder + "Cell1Ds.inp",

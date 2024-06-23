@@ -82,6 +82,7 @@ int main()
     {
         Traces.push_back(trace);
     }
+    traces_list.clear();
 
     if (!Data::ExportFirstFile(outputFileName, Traces))
     {
